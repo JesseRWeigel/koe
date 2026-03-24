@@ -1,9 +1,12 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
-// Mock @ai-sdk/openai before importing the module under test
-const mockModel = { modelId: "mock-model", provider: "mock-provider" };
-const mockCreateOpenAI = vi.fn(() => {
-  return vi.fn(() => mockModel);
+// vi.mock is hoisted, so the factory cannot reference outer variables.
+// Instead, use vi.hoisted to create the mock in the hoisted scope.
+const { mockCreateOpenAI, mockProviderFn } = vi.hoisted(() => {
+  const mockModel = { modelId: "mock-model", provider: "mock-provider" };
+  const mockProviderFn = vi.fn(() => mockModel);
+  const mockCreateOpenAI = vi.fn(() => mockProviderFn);
+  return { mockCreateOpenAI, mockProviderFn, mockModel };
 });
 
 vi.mock("@ai-sdk/openai", () => ({
@@ -14,13 +17,14 @@ vi.mock("@ai-sdk/openai", () => ({
 const mockFetch = vi.fn();
 vi.stubGlobal("fetch", mockFetch);
 
-import { getModel, getProviderConfig, isOllamaAvailable } from "./provider";
-
 describe("AI Provider Abstraction", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.unstubAllEnvs();
     mockCreateOpenAI.mockClear();
+    mockProviderFn.mockClear();
     mockFetch.mockReset();
+    // Re-import to pick up fresh env
+    vi.resetModules();
   });
 
   afterEach(() => {
@@ -28,28 +32,32 @@ describe("AI Provider Abstraction", () => {
   });
 
   describe("getModel", () => {
-    it('returns an AI SDK model object for "chat" purpose', () => {
+    it('returns an AI SDK model object for "chat" purpose', async () => {
       vi.stubEnv("DEFAULT_AI_PROVIDER", "ollama");
+      const { getModel } = await import("./provider");
       const model = getModel("chat");
       expect(model).toBeDefined();
       expect(model).toHaveProperty("modelId");
     });
 
-    it('returns a model for "grammar" purpose', () => {
+    it('returns a model for "grammar" purpose', async () => {
       vi.stubEnv("DEFAULT_AI_PROVIDER", "ollama");
+      const { getModel } = await import("./provider");
       const model = getModel("grammar");
       expect(model).toBeDefined();
     });
 
-    it('returns a model for "content" purpose', () => {
+    it('returns a model for "content" purpose', async () => {
       vi.stubEnv("DEFAULT_AI_PROVIDER", "ollama");
+      const { getModel } = await import("./provider");
       const model = getModel("content");
       expect(model).toBeDefined();
     });
 
-    it("uses OpenAI provider with Ollama base URL when DEFAULT_AI_PROVIDER=ollama", () => {
+    it("uses OpenAI provider with Ollama base URL when DEFAULT_AI_PROVIDER=ollama", async () => {
       vi.stubEnv("DEFAULT_AI_PROVIDER", "ollama");
       vi.stubEnv("OLLAMA_BASE_URL", "http://myhost:11434");
+      const { getModel } = await import("./provider");
 
       getModel("chat");
 
@@ -60,8 +68,9 @@ describe("AI Provider Abstraction", () => {
       );
     });
 
-    it("uses default Ollama base URL when OLLAMA_BASE_URL is not set", () => {
+    it("uses default Ollama base URL when OLLAMA_BASE_URL is not set", async () => {
       vi.stubEnv("DEFAULT_AI_PROVIDER", "ollama");
+      const { getModel } = await import("./provider");
 
       getModel("chat");
 
@@ -72,35 +81,40 @@ describe("AI Provider Abstraction", () => {
       );
     });
 
-    it("uses gateway model string when DEFAULT_AI_PROVIDER=gateway", () => {
+    it("uses gateway model string when DEFAULT_AI_PROVIDER=gateway", async () => {
       vi.stubEnv("DEFAULT_AI_PROVIDER", "gateway");
+      const { getModel } = await import("./provider");
+
       const model = getModel("chat");
       expect(model).toBeDefined();
     });
 
-    it("uses custom model names from env for ollama", () => {
+    it("uses custom model names from env for ollama", async () => {
       vi.stubEnv("DEFAULT_AI_PROVIDER", "ollama");
       vi.stubEnv("OLLAMA_CHAT_MODEL", "custom-chat-model");
+      const { getModel } = await import("./provider");
 
       getModel("chat");
 
-      // The provider function returned by createOpenAI should be called with the custom model
-      const providerFn = mockCreateOpenAI.mock.results[0]?.value;
-      expect(providerFn).toHaveBeenCalledWith("custom-chat-model");
+      expect(mockProviderFn).toHaveBeenCalledWith("custom-chat-model");
     });
 
-    it("uses custom model names from env for gateway", () => {
+    it("uses custom model names from env for gateway", async () => {
       vi.stubEnv("DEFAULT_AI_PROVIDER", "gateway");
       vi.stubEnv("GATEWAY_CHAT_MODEL", "custom/gateway-model");
+      const { getModel } = await import("./provider");
 
       const model = getModel("chat");
       expect(model).toBeDefined();
+      // The provider function should have been called with the custom model name
+      expect(mockProviderFn).toHaveBeenCalledWith("custom/gateway-model");
     });
   });
 
   describe("getProviderConfig", () => {
-    it("returns current provider settings for ollama", () => {
+    it("returns current provider settings for ollama", async () => {
       vi.stubEnv("DEFAULT_AI_PROVIDER", "ollama");
+      const { getProviderConfig } = await import("./provider");
 
       const config = getProviderConfig();
 
@@ -115,8 +129,9 @@ describe("AI Provider Abstraction", () => {
       });
     });
 
-    it("returns current provider settings for gateway", () => {
+    it("returns current provider settings for gateway", async () => {
       vi.stubEnv("DEFAULT_AI_PROVIDER", "gateway");
+      const { getProviderConfig } = await import("./provider");
 
       const config = getProviderConfig();
 
@@ -131,7 +146,9 @@ describe("AI Provider Abstraction", () => {
       });
     });
 
-    it("defaults to ollama when DEFAULT_AI_PROVIDER is not set", () => {
+    it("defaults to ollama when DEFAULT_AI_PROVIDER is not set", async () => {
+      const { getProviderConfig } = await import("./provider");
+
       const config = getProviderConfig();
       expect(config.provider).toBe("ollama");
     });
@@ -140,6 +157,7 @@ describe("AI Provider Abstraction", () => {
   describe("isOllamaAvailable", () => {
     it("returns true when Ollama health endpoint responds OK", async () => {
       mockFetch.mockResolvedValueOnce({ ok: true });
+      const { isOllamaAvailable } = await import("./provider");
 
       const available = await isOllamaAvailable();
 
@@ -152,6 +170,7 @@ describe("AI Provider Abstraction", () => {
 
     it("returns false when Ollama health endpoint fails", async () => {
       mockFetch.mockRejectedValueOnce(new Error("Connection refused"));
+      const { isOllamaAvailable } = await import("./provider");
 
       const available = await isOllamaAvailable();
 
@@ -160,6 +179,7 @@ describe("AI Provider Abstraction", () => {
 
     it("returns false when Ollama responds with non-OK status", async () => {
       mockFetch.mockResolvedValueOnce({ ok: false });
+      const { isOllamaAvailable } = await import("./provider");
 
       const available = await isOllamaAvailable();
 
