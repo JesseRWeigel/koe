@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import type { VocabCard } from "@/lib/srs/review-session";
+import { toRomaji } from "@/lib/languages";
 
 interface FlashcardProps {
   card: VocabCard;
@@ -54,7 +55,10 @@ export function Flashcard({ card, onReveal, revealed }: FlashcardProps) {
         <div className="flex min-h-[280px] flex-col items-center justify-center rounded-xl bg-card p-8 ring-1 ring-foreground/10 [backface-visibility:hidden]">
           <p className="text-4xl font-bold">{card.word}</p>
           {card.reading && card.reading !== card.word && (
-            <p className="text-muted-foreground mt-3 text-xl">{card.reading}</p>
+            <>
+              <p className="text-muted-foreground mt-3 text-xl">{card.reading}</p>
+              <p className="text-muted-foreground/60 mt-1 font-mono text-sm">{toRomaji(card.reading)}</p>
+            </>
           )}
           {!revealed && (
             <p className="text-muted-foreground mt-8 text-sm">
