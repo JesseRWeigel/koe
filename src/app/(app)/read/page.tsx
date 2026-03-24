@@ -22,6 +22,7 @@ export default function ReadPage() {
       setLoading(true);
       setError(null);
       setCurrentTopic(topic);
+      setPassage("");
 
       try {
         const res = await fetch("/api/content", {
@@ -31,12 +32,18 @@ export default function ReadPage() {
         });
 
         if (!res.ok) {
-          const data = await res.json().catch(() => ({}));
-          throw new Error(data.error || "Failed to generate passage");
+          throw new Error("Failed to generate passage");
         }
 
-        const data = await res.json();
-        setPassage(data.content);
+        const reader = res.body!.getReader();
+        const decoder = new TextDecoder();
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          const chunk = decoder.decode(value, { stream: true });
+          setPassage(prev => (prev || "") + chunk);
+        }
       } catch (err) {
         setError(
           err instanceof Error ? err.message : "Failed to generate passage"
@@ -108,7 +115,7 @@ export default function ReadPage() {
           </>
         )}
 
-        {loading && (
+        {loading && !passage && (
           <div className="mx-auto w-full max-w-2xl space-y-4 px-4 py-8">
             <Skeleton className="h-8 w-2/3" />
             <Skeleton className="h-4 w-full" />
@@ -133,17 +140,19 @@ export default function ReadPage() {
           </div>
         )}
 
-        {passage && !loading && (
+        {passage && !error && (
           <>
             <ReadingPassage content={passage} />
-            <div className="mx-auto max-w-2xl px-4 pb-8 text-center">
-              <button
-                className="text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground"
-                onClick={handleStartOver}
-              >
-                Choose a different topic
-              </button>
-            </div>
+            {!loading && (
+              <div className="mx-auto max-w-2xl px-4 pb-8 text-center">
+                <button
+                  className="text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground"
+                  onClick={handleStartOver}
+                >
+                  Choose a different topic
+                </button>
+              </div>
+            )}
           </>
         )}
       </main>

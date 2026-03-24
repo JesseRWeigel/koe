@@ -1,4 +1,4 @@
-import { generateText } from "ai";
+import { streamText } from "ai";
 import { getModel } from "@/lib/ai";
 import {
   buildReaderSystemPrompt,
@@ -20,13 +20,13 @@ export async function POST(req: Request) {
       );
     }
 
-    const result = await generateText({
+    const result = streamText({
       model: getModel("content"),
       system: buildReaderSystemPrompt(language, level),
-      prompt: `Generate a short reading passage (200-400 words) about: ${topic}`,
+      prompt: `Generate a short reading passage (100-150 words) about: ${topic}. Keep it concise.`,
     });
 
-    return Response.json({ content: result.text });
+    return result.toTextStreamResponse();
   } catch (error) {
     console.error("Content generation error:", error);
     return Response.json(
