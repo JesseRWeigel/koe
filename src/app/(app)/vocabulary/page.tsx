@@ -1,5 +1,8 @@
+"use client";
+
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
+import { VocabularyList } from "@/components/vocabulary/vocabulary-list";
 
 export default function VocabularyPage() {
   return (
@@ -9,12 +12,8 @@ export default function VocabularyPage() {
         <Separator orientation="vertical" className="mr-2 h-4" />
         <h1 className="text-lg font-semibold">Vocabulary</h1>
       </header>
-      <main className="flex flex-1 items-center justify-center p-6">
-        <div className="text-center">
-          <p className="text-muted-foreground text-lg">
-            Vocabulary management coming soon
-          </p>
-        </div>
+      <main className="flex-1">
+        <VocabularyList />
       </main>
     </>
   );
