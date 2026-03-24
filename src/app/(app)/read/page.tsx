@@ -87,7 +87,7 @@ export default function ReadPage() {
         <h1 className="text-lg font-semibold">Graded Reader</h1>
       </header>
 
-      {(passage || loading) && (
+      {(passage !== null || loading) && (
         <ReaderControls
           language={language}
           level={level}
@@ -99,7 +99,7 @@ export default function ReadPage() {
       )}
 
       <main className="flex flex-1 flex-col overflow-y-auto">
-        {!passage && !loading && !error && (
+        {passage === null && !loading && !error && (
           <>
             <div className="mx-auto max-w-2xl px-4 pt-8">
               <ReaderControls
@@ -115,7 +115,7 @@ export default function ReadPage() {
           </>
         )}
 
-        {loading && !passage && (
+        {loading && passage === null && (
           <div className="mx-auto w-full max-w-2xl space-y-4 px-4 py-8">
             <Skeleton className="h-8 w-2/3" />
             <Skeleton className="h-4 w-full" />
@@ -140,7 +140,7 @@ export default function ReadPage() {
           </div>
         )}
 
-        {passage && !error && (
+        {passage !== null && !error && (
           <>
             <ReadingPassage content={passage} />
             {!loading && (

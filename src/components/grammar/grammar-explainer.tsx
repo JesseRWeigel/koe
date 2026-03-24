@@ -61,14 +61,23 @@ export function GrammarExplainer({ onExplanation }: GrammarExplainerProps) {
         throw new Error("Failed to get grammar explanation");
       }
 
-      const data = await response.json();
-      setExplanation(data.explanation);
+      const reader = response.body!.getReader();
+      const decoder = new TextDecoder();
+      let fullText = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const chunk = decoder.decode(value, { stream: true });
+        fullText += chunk;
+        setExplanation(fullText);
+      }
 
       onExplanation({
         id: crypto.randomUUID(),
         text: text.trim(),
         language,
-        explanation: data.explanation,
+        explanation: fullText,
         createdAt: new Date(),
       });
     } catch {

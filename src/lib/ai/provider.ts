@@ -57,8 +57,12 @@ export function getModel(purpose: ModelPurpose): LanguageModel {
     const baseUrl = getOllamaBaseUrl();
     const ollama = createOllama({ baseURL: baseUrl });
     // Disable thinking on qwen3/qwen3.5 models for instant responses.
+    // Use 4096 context to fit fully in GPU VRAM (32K default causes CPU offloading).
     // See: https://docs.ollama.com/capabilities/thinking
-    return ollama(modelName, { think: false });
+    return ollama(modelName, {
+      think: false,
+      options: { num_ctx: 4096, num_gpu: 99 },
+    });
   }
 
   // Gateway: use createOpenAI with the gateway model string

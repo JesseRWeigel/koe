@@ -1,4 +1,4 @@
-import { generateText } from "ai";
+import { streamText } from "ai";
 import { getModel } from "@/lib/ai";
 import {
   buildGrammarSystemPrompt,
@@ -19,11 +19,11 @@ export async function POST(req: Request) {
     );
   }
 
-  const result = await generateText({
+  const result = streamText({
     model: getModel("grammar"),
     system: buildGrammarSystemPrompt(language),
     prompt: `Explain this grammar: "${text}"${context ? `\nContext: ${context}` : ""}`,
   });
 
-  return Response.json({ explanation: result.text });
+  return result.toTextStreamResponse();
 }
