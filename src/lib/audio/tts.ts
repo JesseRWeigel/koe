@@ -20,7 +20,7 @@ export function isSupported(): boolean {
 
 /** Returns 'elevenlabs' if API key is set, otherwise 'browser' */
 export function getPreferredProvider(): TTSProvider {
-  const key = import.meta.env?.VITE_ELEVENLABS_API_KEY;
+  const key = process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY;
   return key ? "elevenlabs" : "browser";
 }
 

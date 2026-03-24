@@ -54,7 +54,7 @@ describe("TTS Service", () => {
       configurable: true,
     });
     // Clear env
-    delete (import.meta as Record<string, unknown>).env?.VITE_ELEVENLABS_API_KEY;
+    delete process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY;
   });
 
   afterEach(() => {
@@ -92,7 +92,7 @@ describe("TTS Service", () => {
     });
 
     it("returns 'elevenlabs' when ELEVENLABS_API_KEY is set", () => {
-      vi.stubEnv("VITE_ELEVENLABS_API_KEY", "test-key-123");
+      vi.stubEnv("NEXT_PUBLIC_ELEVENLABS_API_KEY", "test-key-123");
       expect(getPreferredProvider()).toBe("elevenlabs");
       vi.unstubAllEnvs();
     });
