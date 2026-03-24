@@ -10,8 +10,12 @@ interface ChatMessagesProps {
 }
 
 function formatMessageText(text: string) {
+  // Strip thinking model tags (e.g., qwen3.5 <think>...</think>)
+  const cleaned = text.replace(/<think>[\s\S]*?<\/think>/g, "").trim();
+  if (!cleaned) return null;
+
   // Split on ~correction~ pattern and render corrections with highlighting
-  const parts = text.split(/(~[^~]+~)/g);
+  const parts = cleaned.split(/(~[^~]+~)/g);
 
   return parts.map((part, i) => {
     if (part.startsWith("~") && part.endsWith("~")) {
@@ -74,7 +78,7 @@ export function ChatMessages({ messages, status }: ChatMessagesProps) {
           </div>
         );
       })}
-      {status === "streaming" && (
+      {(status === "streaming" || status === "submitted") && (
         <div className="flex justify-start">
           <div className="text-muted-foreground px-4 py-2 text-sm italic">
             AI is typing...

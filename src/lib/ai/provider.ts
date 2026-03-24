@@ -1,4 +1,5 @@
 import { createOpenAI } from "@ai-sdk/openai";
+import { createOllama } from "ai-sdk-ollama";
 import type { LanguageModel } from "ai";
 
 export type ModelPurpose = "chat" | "grammar" | "content";
@@ -11,9 +12,9 @@ interface ProviderConfig {
 }
 
 const OLLAMA_DEFAULT_MODELS: Record<ModelPurpose, string> = {
-  chat: "qwen3.5:27b",
+  chat: "qwen3.5:9b",
   grammar: "qwen3.5:9b",
-  content: "qwen3.5:27b",
+  content: "qwen3.5:9b",
 };
 
 const GATEWAY_DEFAULT_MODELS: Record<ModelPurpose, string> = {
@@ -54,11 +55,10 @@ export function getModel(purpose: ModelPurpose): LanguageModel {
 
   if (provider === "ollama") {
     const baseUrl = getOllamaBaseUrl();
-    const openai = createOpenAI({
-      baseURL: `${baseUrl}/v1`,
-      apiKey: "ollama", // Ollama doesn't need a real API key
-    });
-    return openai(modelName);
+    const ollama = createOllama({ baseURL: baseUrl });
+    // Disable thinking on qwen3/qwen3.5 models for instant responses.
+    // See: https://docs.ollama.com/capabilities/thinking
+    return ollama(modelName, { think: false });
   }
 
   // Gateway: use createOpenAI with the gateway model string
