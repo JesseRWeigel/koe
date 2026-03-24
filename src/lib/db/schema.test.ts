@@ -50,7 +50,7 @@ describe("users table", () => {
     const cols = getTableColumns(users);
     expect(cols.id.dataType).toBe("string");
     expect(cols.id.columnType).toBe("PgUUID");
-    expect(cols.id.isPrimaryKey).toBe(true);
+    expect(cols.id.primary).toBe(true);
   });
 
   test("settings is jsonb", () => {
@@ -70,7 +70,7 @@ describe("languages table", () => {
   test("id is serial primary key", () => {
     const cols = getTableColumns(languages);
     expect(cols.id.columnType).toBe("PgSerial");
-    expect(cols.id.isPrimaryKey).toBe(true);
+    expect(cols.id.primary).toBe(true);
   });
 
   test("code uses languageCodeEnum", () => {
@@ -98,7 +98,7 @@ describe("vocabulary table", () => {
   test("id is uuid primary key", () => {
     const cols = getTableColumns(vocabulary);
     expect(cols.id.columnType).toBe("PgUUID");
-    expect(cols.id.isPrimaryKey).toBe(true);
+    expect(cols.id.primary).toBe(true);
   });
 
   test("reading is nullable (for Japanese)", () => {
@@ -146,7 +146,7 @@ describe("cards table", () => {
   test("id is uuid primary key", () => {
     const cols = getTableColumns(cards);
     expect(cols.id.columnType).toBe("PgUUID");
-    expect(cols.id.isPrimaryKey).toBe(true);
+    expect(cols.id.primary).toBe(true);
   });
 
   test("cardType uses cardTypeEnum", () => {
@@ -181,7 +181,7 @@ describe("reviews table", () => {
   test("id is uuid primary key", () => {
     const cols = getTableColumns(reviews);
     expect(cols.id.columnType).toBe("PgUUID");
-    expect(cols.id.isPrimaryKey).toBe(true);
+    expect(cols.id.primary).toBe(true);
   });
 
   test("rating is integer", () => {
@@ -225,7 +225,7 @@ describe("studySessions table", () => {
   test("id is uuid primary key", () => {
     const cols = getTableColumns(studySessions);
     expect(cols.id.columnType).toBe("PgUUID");
-    expect(cols.id.isPrimaryKey).toBe(true);
+    expect(cols.id.primary).toBe(true);
   });
 
   test("endedAt is nullable", () => {
@@ -254,7 +254,7 @@ describe("grammarPoints table", () => {
   test("id is uuid primary key", () => {
     const cols = getTableColumns(grammarPoints);
     expect(cols.id.columnType).toBe("PgUUID");
-    expect(cols.id.isPrimaryKey).toBe(true);
+    expect(cols.id.primary).toBe(true);
   });
 
   test("explanation is text", () => {
