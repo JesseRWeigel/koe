@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -77,11 +77,14 @@ export function CognateBrowser() {
     <div className="space-y-4">
       <div className="relative">
         <SearchIcon className="absolute left-2.5 top-2 h-4 w-4 text-muted-foreground" />
-        <Input
+        <input
+          data-testid="cognate-search"
           placeholder="Search cognates..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="pl-8"
+          className={cn(
+            "h-8 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-1 pl-8 text-base transition-colors outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm dark:bg-input/30",
+          )}
         />
       </div>
 
