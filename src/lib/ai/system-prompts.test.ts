@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { buildSystemPrompt, buildGrammarSystemPrompt, buildReaderSystemPrompt } from "./system-prompts";
+import { buildSystemPrompt, buildGrammarSystemPrompt, buildReaderSystemPrompt, buildWritingCorrectionPrompt } from "./system-prompts";
 
 describe("buildSystemPrompt", () => {
   it("includes the language name in the prompt", () => {
@@ -229,5 +229,58 @@ describe("buildGrammarSystemPrompt", () => {
     const prompt = buildGrammarSystemPrompt("es");
     expect(prompt).toContain("Respond in English");
     expect(prompt).toContain("target language");
+  });
+});
+
+describe("buildWritingCorrectionPrompt", () => {
+  it("returns a string containing correction instructions", () => {
+    const prompt = buildWritingCorrectionPrompt("ja");
+    expect(typeof prompt).toBe("string");
+    expect(prompt.length).toBeGreaterThan(0);
+    expect(prompt).toContain("grammar");
+    expect(prompt).toContain("corrected");
+  });
+
+  it("includes the language name", () => {
+    const prompt = buildWritingCorrectionPrompt("ja");
+    expect(prompt).toContain("Japanese");
+  });
+
+  it("includes language-specific guidance for Japanese", () => {
+    const prompt = buildWritingCorrectionPrompt("ja");
+    expect(prompt).toContain("Particle");
+    expect(prompt).toContain("Japanese");
+  });
+
+  it("includes language-specific guidance for Spanish", () => {
+    const prompt = buildWritingCorrectionPrompt("es");
+    expect(prompt).toContain("Spanish");
+    expect(prompt).toContain("Gender");
+  });
+
+  it("includes language-specific guidance for Brazilian Portuguese", () => {
+    const prompt = buildWritingCorrectionPrompt("pt-BR");
+    expect(prompt).toContain("Portuguese");
+  });
+
+  it("instructs to identify errors and provide corrections", () => {
+    const prompt = buildWritingCorrectionPrompt("ja");
+    expect(prompt).toContain("error");
+    expect(prompt).toContain("corrected version");
+  });
+
+  it("instructs to explain corrections", () => {
+    const prompt = buildWritingCorrectionPrompt("es");
+    expect(prompt).toContain("explain");
+  });
+
+  it("instructs to be encouraging", () => {
+    const prompt = buildWritingCorrectionPrompt("ja");
+    expect(prompt).toContain("encouraging");
+  });
+
+  it("instructs to rate overall quality", () => {
+    const prompt = buildWritingCorrectionPrompt("ja");
+    expect(prompt).toContain("overall");
   });
 });

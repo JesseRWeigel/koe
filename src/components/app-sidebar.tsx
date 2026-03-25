@@ -23,6 +23,7 @@ import {
   BookOpenIcon,
   LibraryIcon,
   GraduationCapIcon,
+  PenLineIcon,
   SettingsIcon,
 } from "lucide-react";
 
@@ -56,6 +57,11 @@ const navItems = [
     title: "Grammar",
     url: "/grammar",
     icon: GraduationCapIcon,
+  },
+  {
+    title: "Writing",
+    url: "/writing",
+    icon: PenLineIcon,
   },
 ];
 

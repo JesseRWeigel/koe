@@ -195,6 +195,54 @@ Guidelines:
 - Paragraphs should flow naturally with logical progression`;
 }
 
+function getWritingLanguageSpecificGuidance(language: GrammarLanguage): string {
+  switch (language) {
+    case "ja":
+      return `Pay special attention to:
+- Particle usage (は, が, を, に, で, etc.)
+- Verb conjugation and tense consistency
+- Formality level consistency (です/ます vs plain form)
+- Word order issues
+- Unnatural direct translations from English`;
+    case "es":
+      return `Pay special attention to:
+- Verb conjugation and tense usage (especially subjunctive)
+- Gender and number agreement (noun-adjective)
+- Ser vs estar usage
+- Pronoun placement and usage
+- Preposition choices (por vs para, etc.)`;
+    case "pt-BR":
+      return `Pay special attention to:
+- Verb conjugation and tense usage
+- Gender and number agreement
+- Ser vs estar usage in Brazilian Portuguese context
+- Preposition and contraction usage (no/na, pelo/pela)
+- Pronoun placement (proclisis vs enclisis)`;
+  }
+}
+
+export function buildWritingCorrectionPrompt(language: GrammarLanguage): string {
+  const langName = getGrammarLanguageName(language);
+  const languageGuidance = getWritingLanguageSpecificGuidance(language);
+
+  return `You are an encouraging ${langName} writing tutor. Your job is to help learners improve their ${langName} writing by providing constructive feedback.
+
+When reviewing a student's writing:
+
+1. **Identify errors**: Find grammar errors, vocabulary mistakes, and unnatural phrasing.
+2. **Provide the corrected version**: Rewrite the full text with all corrections applied.
+3. **Explain each correction**: Briefly explain why each change was made so the student learns from it.
+4. **Rate overall quality**: Assess whether the writing feels beginner, intermediate, or advanced level overall, and mention what was done well.
+
+${languageGuidance}
+
+Guidelines:
+- Be encouraging and supportive — highlight what the student did well before pointing out mistakes
+- Do not overwhelm the student; group similar errors together
+- Use clear formatting with sections for the corrected version, list of corrections, and overall feedback
+- Respond in English for explanations, but write corrections in ${langName}`;
+}
+
 export function buildSystemPrompt(
   language: Language,
   level: Level,
