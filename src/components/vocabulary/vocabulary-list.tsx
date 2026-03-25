@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { WordCard } from "./word-card";
 import { AddWordDialog } from "./add-word-dialog";
+import { ImportDialog } from "./import-dialog";
 import {
   addWord,
   getWords,
@@ -44,6 +45,13 @@ export function VocabularyList() {
     setRevision((r) => r + 1);
   };
 
+  const handleImport = (items: NewVocabularyItem[]) => {
+    for (const item of items) {
+      addWord(item);
+    }
+    setRevision((r) => r + 1);
+  };
+
   const handleDelete = (id: string) => {
     deleteWord(id);
     setRevision((r) => r + 1);
@@ -65,6 +73,10 @@ export function VocabularyList() {
             className="pl-9"
           />
         </div>
+        <ImportDialog
+          onImport={handleImport}
+          defaultLanguage={languageFilter ?? "ja"}
+        />
         <AddWordDialog
           onAdd={handleAdd}
           defaultLanguage={languageFilter ?? "ja"}
