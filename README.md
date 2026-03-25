@@ -29,22 +29,26 @@ Most language apps are great at getting you started (A1-A2) but abandon you at t
 
 ### MVP (In Progress)
 
-- [ ] FSRS-powered vocabulary flashcards with context sentences and audio
-- [ ] AI conversation partner (cloud + local model support)
-- [ ] Graded reading engine with inline glossing
-- [ ] Multi-language support (Japanese, Spanish, Brazilian Portuguese)
-- [ ] Dashboard with progress tracking
-- [ ] Grammar explanations on demand via AI
+- [x] FSRS-powered vocabulary flashcards with context sentences and audio
+- [x] AI conversation partner (cloud + local model support)
+- [x] Graded reading engine with inline glossing and streaming
+- [x] Multi-language support (Japanese, Spanish, Brazilian Portuguese)
+- [x] Dashboard with real-time progress tracking
+- [x] Grammar explanations on demand via AI
+- [x] Writing practice with AI correction
+- [x] Mobile PWA (installable on phones)
+- [x] Romaji display for Japanese flashcards
+- [x] Text-to-speech for pronunciation
 
 ### Planned
 
-- [ ] Shadowing mode (listen → record → compare)
-- [ ] Writing practice with AI correction
-- [ ] Pitch accent training (Japanese)
+- [ ] Anki deck import (CSV/TSV)
+- [ ] Conversation history and vocabulary extraction
 - [ ] Content difficulty grading for external media
-- [ ] Import vocabulary from external sources
+- [ ] Shadowing mode (listen → record → compare)
+- [ ] Pitch accent training (Japanese)
 - [ ] Kanji radical-based learning system (Japanese)
-- [ ] Mobile PWA support
+- [ ] Spanish-Portuguese cognate system
 
 ## Getting Started
 
@@ -59,8 +63,9 @@ Most language apps are great at getting you started (A1-A2) but abandon you at t
 **Option A: Local models with Ollama (free, private, requires GPU)**
 
 1. Install [Ollama](https://ollama.ai/)
-2. Pull a model: `ollama pull qwen3.5:27b` (or any model that fits your VRAM)
+2. Pull a model: `ollama pull qwen3.5:9b` (fits in 16GB+ VRAM, fast responses)
 3. Ollama runs on `http://localhost:11434` by default
+4. For higher quality with 32GB+ VRAM: `ollama pull qwen3.5:27b` and set `OLLAMA_CHAT_MODEL=qwen3.5:27b` in `.env.local`
 
 **Option B: Cloud models via Vercel AI Gateway**
 
@@ -119,11 +124,13 @@ koe/
 │   │   ├── review/         # SRS review session
 │   │   ├── chat/           # AI conversation partner
 │   │   ├── read/           # Graded reader
-│   │   └── vocabulary/     # Word management
+│   │   ├── vocabulary/     # Word management
+│   │   └── writing/        # AI writing practice
 │   └── api/                # API routes
 │       ├── chat/           # AI chat endpoint
 │       ├── tts/            # Text-to-speech
-│       └── content/        # Content generation
+│       ├── content/        # Content generation
+│       └── writing/        # Writing correction
 ├── components/             # React components
 │   ├── ui/                 # shadcn/ui components
 │   └── ...                 # Feature components
