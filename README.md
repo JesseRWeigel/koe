@@ -39,16 +39,17 @@ Most language apps are great at getting you started (A1-A2) but abandon you at t
 - [x] Mobile PWA (installable on phones)
 - [x] Romaji display for Japanese flashcards
 - [x] Text-to-speech for pronunciation
+- [x] Anki deck import (CSV/TSV with field mapping)
+- [x] Conversation history and persistence
+- [x] Content difficulty grading tool
+- [x] Shadowing mode (listen → record → compare)
+- [x] Kanji radical learning system (20 N5 kanji)
+- [x] Spanish-Portuguese cognate system with false friend warnings
 
 ### Planned
 
-- [ ] Anki deck import (CSV/TSV)
-- [ ] Conversation history and vocabulary extraction
-- [ ] Content difficulty grading for external media
-- [ ] Shadowing mode (listen → record → compare)
 - [ ] Pitch accent training (Japanese)
-- [ ] Kanji radical-based learning system (Japanese)
-- [ ] Spanish-Portuguese cognate system
+- [ ] French language support (community contribution welcome!)
 
 ## Getting Started
 
