@@ -142,7 +142,7 @@ When explaining a grammar point:
 
 ${languageSpecific}
 
-Respond in English, but write all ${langName} examples in the target language (with romaji/transliteration for Japanese where helpful). Format your response with clear sections using markdown-style formatting.`;
+Respond in English, but write all ${langName} examples in the target language with readings in parentheses for Japanese (e.g., 食(た)べる). Do NOT use romaji — learners should read kana directly. Format your response with clear sections using markdown-style formatting.`;
 }
 
 export type LanguageLevel = JapaneseLevel | CEFRLevel | "C2";
