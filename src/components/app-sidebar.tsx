@@ -24,6 +24,7 @@ import {
   LibraryIcon,
   GraduationCapIcon,
   PenLineIcon,
+  WrenchIcon,
   SettingsIcon,
 } from "lucide-react";
 
@@ -62,6 +63,11 @@ const navItems = [
     title: "Writing",
     url: "/writing",
     icon: PenLineIcon,
+  },
+  {
+    title: "Tools",
+    url: "/tools",
+    icon: WrenchIcon,
   },
 ];
 
