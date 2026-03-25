@@ -1,0 +1,12 @@
+{
+  "name": "Koe — Language Learning",
+  "short_name": "Koe",
+  "description": "AI-powered language learning with spaced repetition",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#09090b",
+  "theme_color": "#09090b",
+  "icons": [
+    { "src": "/icons/icon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}

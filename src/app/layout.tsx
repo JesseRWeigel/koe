@@ -17,6 +17,17 @@ export const metadata: Metadata = {
   title: "Koe — Language Learning",
   description:
     "AI-powered language learning with spaced repetition, conversation practice, and graded reading.",
+  manifest: "/manifest.json",
+  themeColor: "#09090b",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Koe",
+  },
+  icons: {
+    icon: "/icons/icon.svg",
+    apple: "/icons/icon.svg",
+  },
 };
 
 export default function RootLayout({
