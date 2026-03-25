@@ -17,6 +17,9 @@ import {
   type Level,
 } from "@/lib/ai/system-prompts";
 
+import { ChatHistory } from "@/components/chat/chat-history";
+import type { Conversation } from "@/lib/chat/history";
+
 interface ChatHeaderProps {
   language: Language;
   level: Level;
@@ -24,6 +27,7 @@ interface ChatHeaderProps {
   onLanguageChange: (language: Language) => void;
   onLevelChange: (level: Level) => void;
   onScenarioChange: (scenario: string) => void;
+  onLoadConversation: (conv: Conversation) => void;
 }
 
 export function ChatHeader({
@@ -33,6 +37,7 @@ export function ChatHeader({
   onLanguageChange,
   onLevelChange,
   onScenarioChange,
+  onLoadConversation,
 }: ChatHeaderProps) {
   const levels = LEVELS[language];
 
@@ -42,6 +47,7 @@ export function ChatHeader({
       <Separator orientation="vertical" className="mr-2 h-4" />
       <h1 className="text-lg font-semibold">Conversation Practice</h1>
       <div className="ml-auto flex items-center gap-2">
+        <ChatHistory onLoadConversation={onLoadConversation} />
         <Select value={language} onValueChange={(val: string | null) => { if (val) onLanguageChange(val as Language); }}>
           <SelectTrigger size="sm">
             <SelectValue />
