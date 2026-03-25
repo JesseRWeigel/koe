@@ -29,7 +29,7 @@ describe('kanji data', () => {
   describe('getKanjiByLevel', () => {
     it('returns N5 kanji', () => {
       const kanji = getKanjiByLevel('N5');
-      expect(kanji.length).toBe(20);
+      expect(kanji.length).toBe(84);
     });
 
     it('all returned kanji have the requested level', () => {
