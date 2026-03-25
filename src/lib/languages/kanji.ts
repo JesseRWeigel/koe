@@ -219,7 +219,7 @@ const kanjiData: KanjiEntry[] = [
   {
     character: '目',
     meanings: ['eye'],
-    readings: { on: ['モク', 'ボク'], kun: ['め', 'ま'] },
+    readings: { on: ['モク'], kun: ['め', 'ま'] },
     radicals: ['目'],
     jlptLevel: 'N5',
     strokeCount: 5,
