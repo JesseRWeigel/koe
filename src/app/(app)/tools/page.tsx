@@ -3,6 +3,7 @@
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
 import { ContentGrader } from "@/components/tools/content-grader";
+import { CognateBrowser } from "@/components/languages/cognate-browser";
 
 export default function ToolsPage() {
   return (
@@ -22,6 +23,19 @@ export default function ToolsPage() {
             vocabulary analysis.
           </p>
           <ContentGrader />
+        </section>
+
+        <Separator />
+
+        <section>
+          <h2 className="mb-3 text-base font-semibold">
+            Spanish ↔ Portuguese Cognates
+          </h2>
+          <p className="text-muted-foreground mb-4 text-sm">
+            Browse cognates between Spanish and Portuguese, and watch out for
+            false friends — words that look similar but have different meanings.
+          </p>
+          <CognateBrowser />
         </section>
       </main>
     </>
