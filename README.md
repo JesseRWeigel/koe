@@ -46,10 +46,11 @@ Most language apps are great at getting you started (A1-A2) but abandon you at t
 - [x] Kanji radical learning system (20 N5 kanji)
 - [x] Spanish-Portuguese cognate system with false friend warnings
 
-### Planned
+- [x] Pitch accent training with visual diagrams (Japanese)
 
-- [ ] Pitch accent training (Japanese)
-- [ ] French language support (community contribution welcome!)
+### Community Contributions Welcome
+
+- [ ] French language support ([see guide](docs/adding-a-language.md))
 
 ## Getting Started
 
