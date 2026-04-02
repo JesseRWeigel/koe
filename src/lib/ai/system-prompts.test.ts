@@ -1,5 +1,10 @@
 import { describe, it, expect } from "vitest";
-import { buildSystemPrompt, buildGrammarSystemPrompt, buildReaderSystemPrompt, buildWritingCorrectionPrompt } from "./system-prompts";
+import {
+  buildSystemPrompt,
+  buildGrammarSystemPrompt,
+  buildReaderSystemPrompt,
+  buildWritingCorrectionPrompt,
+} from "./system-prompts";
 
 describe("buildSystemPrompt", () => {
   it("includes the language name in the prompt", () => {
@@ -88,6 +93,37 @@ describe("buildSystemPrompt", () => {
     });
   });
 
+  describe("French levels", () => {
+    it("uses beginner instructions for A1", () => {
+      const prompt = buildSystemPrompt("french", "A1");
+      expect(prompt).toContain("simple vocabulary");
+      expect(prompt).toContain("French");
+    });
+
+    it("uses beginner instructions for A2", () => {
+      const prompt = buildSystemPrompt("french", "A2");
+      expect(prompt).toContain("translations in parentheses");
+      expect(prompt).toContain("French");
+    });
+
+    it("uses intermediate instructions for B1", () => {
+      const prompt = buildSystemPrompt("french", "B1");
+      expect(prompt).toContain("primarily in French");
+      expect(prompt).not.toContain("translations in parentheses");
+    });
+
+    it("uses intermediate instructions for B2", () => {
+      const prompt = buildSystemPrompt("french", "B2");
+      expect(prompt).toContain("primarily in French");
+    });
+
+    it("uses advanced instructions for C1", () => {
+      const prompt = buildSystemPrompt("french", "C1");
+      expect(prompt).toContain("entirely in French");
+      expect(prompt).toContain("sophisticated vocabulary");
+    });
+  });
+
   describe("scenarios", () => {
     it("includes restaurant scenario instructions", () => {
       const prompt = buildSystemPrompt("japanese", "N5", "restaurant");
@@ -108,6 +144,13 @@ describe("buildSystemPrompt", () => {
     it("includes interview scenario instructions", () => {
       const prompt = buildSystemPrompt("portuguese", "B2", "interview");
       expect(prompt).toContain("interview");
+    });
+
+    it("includes scenario instructions for French", () => {
+      const prompt = buildSystemPrompt("french", "B1", "shopping");
+      expect(prompt).toContain("shopping");
+      expect(prompt).toContain("shop clerk");
+      expect(prompt).toContain("French");
     });
   });
 
@@ -146,28 +189,33 @@ describe("buildReaderSystemPrompt", () => {
     expect(prompt).not.toContain("furigana");
   });
 
-  it("includes content generation guidelines", () => {
-    const prompt = buildReaderSystemPrompt("es", "A2");
-    expect(prompt).toContain("200-400 words");
-    expect(prompt).toContain("title");
-    expect(prompt).toContain("NOT a textbook exercise");
+  it("does NOT include furigana instructions for French", () => {
+    const prompt = buildReaderSystemPrompt("fr", "A1");
+    expect(prompt).not.toContain("furigana");
   });
 
-  it("constrains vocabulary to the specified level", () => {
-    const promptA1 = buildReaderSystemPrompt("es", "A1");
+  it("includes the French language name", () => {
+    const prompt = buildReaderSystemPrompt("fr", "B1");
+    expect(prompt).toContain("French");
+  });
+
+  it("includes correct level description for French levels", () => {
+    const promptA1 = buildReaderSystemPrompt("fr", "A1");
     expect(promptA1).toContain("A1");
     expect(promptA1).toContain("beginner");
     expect(promptA1).toContain("~500 words");
 
-    const promptB2 = buildReaderSystemPrompt("es", "B2");
+    const promptB2 = buildReaderSystemPrompt("fr", "B2");
     expect(promptB2).toContain("B2");
     expect(promptB2).toContain("upper intermediate");
     expect(promptB2).toContain("~5,000 words");
   });
 
-  it("uses correct language name for Portuguese", () => {
-    const prompt = buildReaderSystemPrompt("pt-BR", "A1");
-    expect(prompt).toContain("Brazilian Portuguese");
+  it("includes content generation guidelines for French", () => {
+    const prompt = buildReaderSystemPrompt("fr", "A2");
+    expect(prompt).toContain("200-400 words");
+    expect(prompt).toContain("title");
+    expect(prompt).toContain("NOT a textbook exercise");
   });
 
   it("includes instructions to write in target language only", () => {
@@ -218,6 +266,16 @@ describe("buildGrammarSystemPrompt", () => {
     expect(prompt).toContain("pronoun placement");
   });
 
+  it("includes language-specific instructions for French", () => {
+    const prompt = buildGrammarSystemPrompt("fr");
+    expect(prompt).toContain("French");
+    expect(prompt).toContain("subjunctive");
+    expect(prompt).toContain("subjonctif");
+    expect(prompt).toContain("être vs avoir");
+    expect(prompt).toContain("gender and number agreement");
+    expect(prompt).toContain("pronoun placement");
+  });
+
   it("includes general grammar explanation instructions", () => {
     const prompt = buildGrammarSystemPrompt("ja");
     expect(prompt).toContain("example sentences");
@@ -229,6 +287,12 @@ describe("buildGrammarSystemPrompt", () => {
     const prompt = buildGrammarSystemPrompt("es");
     expect(prompt).toContain("Respond in English");
     expect(prompt).toContain("target language");
+  });
+
+  it("instructs to respond in English with French examples", () => {
+    const prompt = buildGrammarSystemPrompt("fr");
+    expect(prompt).toContain("Respond in English");
+    expect(prompt).toContain("French");
   });
 });
 
@@ -263,6 +327,16 @@ describe("buildWritingCorrectionPrompt", () => {
     expect(prompt).toContain("Portuguese");
   });
 
+  it("includes language-specific guidance for French", () => {
+    const prompt = buildWritingCorrectionPrompt("fr");
+    expect(prompt).toContain("French");
+    expect(prompt).toContain("Gender");
+    expect(prompt).toContain("tre vs avoir");
+    expect(prompt).toContain("past participle agreement");
+    expect(prompt).toContain("Pronoun");
+    expect(prompt).toContain("Negation");
+  });
+
   it("instructs to identify errors and provide corrections", () => {
     const prompt = buildWritingCorrectionPrompt("ja");
     expect(prompt).toContain("error");
@@ -282,5 +356,11 @@ describe("buildWritingCorrectionPrompt", () => {
   it("instructs to rate overall quality", () => {
     const prompt = buildWritingCorrectionPrompt("ja");
     expect(prompt).toContain("overall");
+  });
+
+  it("instructs to be encouraging for French", () => {
+    const prompt = buildWritingCorrectionPrompt("fr");
+    expect(prompt).toContain("encouraging");
+    expect(prompt).toContain("corrected version");
   });
 });

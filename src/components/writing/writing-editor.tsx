@@ -51,6 +51,8 @@ function getLanguageCode(language: Language): string {
       return "es";
     case "portuguese":
       return "pt-BR";
+    case "french":
+      return "fr";
   }
 }
 

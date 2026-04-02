@@ -58,6 +58,8 @@ function getLanguageName(language: Language): string {
       return "Spanish";
     case "portuguese":
       return "Portuguese";
+    case "french":
+      return "French";
   }
 }
 
@@ -97,7 +99,7 @@ function getScenarioInstructions(scenario: string): string {
   }
 }
 
-export type GrammarLanguage = "ja" | "es" | "pt-BR";
+export type GrammarLanguage = "ja" | "es" | "pt-BR" | "fr";
 
 function getGrammarLanguageName(language: GrammarLanguage): string {
   switch (language) {
@@ -107,6 +109,8 @@ function getGrammarLanguageName(language: GrammarLanguage): string {
       return "Spanish";
     case "pt-BR":
       return "Brazilian Portuguese";
+    case "fr":
+      return "French";
   }
 }
 
@@ -133,6 +137,14 @@ function getLanguageSpecificGrammarInstructions(language: GrammarLanguage): stri
 - Explain ser vs estar in the Portuguese context
 - Cover pronoun placement rules (proclisis, enclisis, mesoclisis)
 - Note differences between European and Brazilian Portuguese where relevant`;
+  case "fr":
+      return `For French grammar:
+- Explain verb tense and mood — especially the subjunctive (subjonctif) and when it is required
+- Clarify être vs avoir as auxiliary verbs in compound tenses (passé composé agreement rules)
+- Note verb agreement with subject (number, person) and past participle agreement
+- Explain pronoun placement (direct/indirect object pronouns, y, en, reflexive)
+- Cover gender and number agreement for nouns, adjectives, and articles
+- Explain key preposition usage (à, de, en, dans, etc.) and contractions (au, du, aux, des)`;
   }
 }
 
@@ -173,6 +185,7 @@ const READER_LANGUAGE_NAMES: Record<string, string> = {
   ja: "Japanese",
   es: "Spanish",
   "pt-BR": "Brazilian Portuguese",
+  fr: "French",
 };
 
 export function buildReaderSystemPrompt(
@@ -226,6 +239,14 @@ function getWritingLanguageSpecificGuidance(language: GrammarLanguage): string {
 - Ser vs estar usage in Brazilian Portuguese context
 - Preposition and contraction usage (no/na, pelo/pela)
 - Pronoun placement (proclisis vs enclisis)`;
+    case "fr":
+      return `Pay special attention to:
+- Verb conjugation and tense usage (especially passé composé vs imparfait, and subjunctive)
+- Gender and number agreement (noun-adjective-article)
+- etre vs avoir as auxiliaries and past participle agreement
+- Pronoun placement and order (me, te, le, lui, y, en)
+- Preposition and contraction usage (au, du, à la, de la)
+- Negation structure (ne...pas, ne...jamais, ne...rien, etc.)`;
   }
 }
 

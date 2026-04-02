@@ -32,7 +32,7 @@ describe("enum types", () => {
   });
 
   test("languageCodeEnum has ja, es, pt-BR", () => {
-    expect(languageCodeEnum.enumValues).toEqual(["ja", "es", "pt-BR"]);
+    expect(languageCodeEnum.enumValues).toEqual(["ja", "es", "pt-BR", "fr"]);
   });
 });
 

@@ -1,7 +1,7 @@
 export type TTSProvider = "browser" | "elevenlabs";
 
 export interface TTSOptions {
-  lang: "ja" | "es" | "pt-BR";
+  lang: "ja" | "es" | "pt-BR" | "fr";
   rate?: number; // 0.5 - 2.0, default 1.0
   provider?: TTSProvider;
 }
@@ -11,6 +11,7 @@ export const LANG_MAP: Record<TTSOptions["lang"], string> = {
   ja: "ja-JP",
   es: "es-ES",
   "pt-BR": "pt-BR",
+  fr: "fr-FR",
 };
 
 /** Check if TTS is available in the current environment */
