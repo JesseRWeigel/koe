@@ -11,7 +11,7 @@ import {
 } from "drizzle-orm/pg-core";
 
 // Enum types
-export const languageCodeEnum = pgEnum("language_code", ["ja", "es", "pt-BR"]);
+export const languageCodeEnum = pgEnum("language_code", ["ja", "es", "pt-BR", "fr"]);
 export const cardTypeEnum = pgEnum("card_type", [
   "recognition",
   "recall",

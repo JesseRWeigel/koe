@@ -1,4 +1,4 @@
-export type Language = "japanese" | "spanish" | "portuguese";
+export type Language = "japanese" | "spanish" | "portuguese" | "french";
 export type JapaneseLevel = "N5" | "N4" | "N3" | "N2" | "N1";
 export type CEFRLevel = "A1" | "A2" | "B1" | "B2" | "C1";
 export type Level = JapaneseLevel | CEFRLevel;
@@ -7,6 +7,7 @@ export const LANGUAGES: { value: Language; label: string }[] = [
   { value: "japanese", label: "Japanese" },
   { value: "spanish", label: "Spanish" },
   { value: "portuguese", label: "Portuguese" },
+  { value: "french", label: "French" },
 ];
 
 export const LEVELS: Record<Language, { value: Level; label: string }[]> = {
@@ -30,6 +31,13 @@ export const LEVELS: Record<Language, { value: Level; label: string }[]> = {
     { value: "B1", label: "B1 (Intermediate)" },
     { value: "B2", label: "B2 (Upper Intermediate)" },
     { value: "C1", label: "C1 (Advanced)" },
+  ],
+  french: [
+  { value: "A1", label: "A1 (Beginner)" },
+  { value: "A2", label: "A2 (Elementary)" },
+  { value: "B1", label: "B1 (Intermediate)" },
+  { value: "B2", label: "B2 (Upper Intermediate)" },
+  { value: "C1", label: "C1 (Advanced)" },
   ],
 };
 
