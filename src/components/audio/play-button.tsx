@@ -9,6 +9,7 @@ import type { LanguageCode } from "@/lib/languages";
 interface PlayButtonProps {
   text: string;
   lang: LanguageCode;
+  rate?: number;
   size?: "sm" | "default";
   className?: string;
 }
@@ -16,6 +17,7 @@ interface PlayButtonProps {
 export function PlayButton({
   text,
   lang,
+  rate,
   size = "default",
   className,
 }: PlayButtonProps) {
@@ -48,7 +50,7 @@ export function PlayButton({
       }
     };
 
-    speak(text, { lang });
+    speak(text, { lang, rate });
 
     // Poll for speech end since SpeechSynthesisUtterance events
     // aren't reliably accessible through our speak() abstraction
@@ -64,7 +66,7 @@ export function PlayButton({
       clearInterval(interval);
       setIsPlaying(false);
     }, 30000);
-  }, [isPlaying, text, lang]);
+  }, [isPlaying, text, lang, rate]);
 
   if (!supported) {
     return null;
