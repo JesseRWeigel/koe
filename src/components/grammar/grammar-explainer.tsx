@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/select";
 import { Loader2Icon, SparklesIcon } from "lucide-react";
 import { type LanguageCode, LANGUAGE_LIST } from "@/lib/languages";
+import { useLanguage } from "@/lib/context/language-context";
 
 export interface GrammarExplanation {
   id: string;
@@ -28,7 +29,7 @@ interface GrammarExplainerProps {
 export function GrammarExplainer({ onExplanation }: GrammarExplainerProps) {
   const [text, setText] = useState("");
   const [context, setContext] = useState("");
-  const [language, setLanguage] = useState<LanguageCode>("ja");
+  const { language, setLanguage: setContextLanguage } = useLanguage();
   const [loading, setLoading] = useState(false);
   const [explanation, setExplanation] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -101,7 +102,7 @@ export function GrammarExplainer({ onExplanation }: GrammarExplainerProps) {
         </div>
         <div className="space-y-2">
           <label className="text-sm font-medium leading-none">Language</label>
-          <Select value={language} onValueChange={(v) => setLanguage(v as LanguageCode)}>
+          <Select value={language} onValueChange={(v) => setContextLanguage(v as LanguageCode)}>
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>

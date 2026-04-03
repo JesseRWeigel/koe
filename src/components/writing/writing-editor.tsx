@@ -13,7 +13,8 @@ import {
 import { Card } from "@/components/ui/card";
 import { Loader2Icon, PenLineIcon, SparklesIcon, LightbulbIcon } from "lucide-react";
 import { LANGUAGES, LEVELS, type Language, type Level } from "@/lib/ai/system-prompts";
-import { languageToCode } from "@/lib/languages";
+import { languageToCode, codeToLanguage } from "@/lib/languages";
+import { useLanguage } from "@/lib/context/language-context";
 
 const WRITING_PROMPTS = [
   "Describe your day today",
@@ -49,8 +50,9 @@ function countWords(text: string): number {
 
 export function WritingEditor({ onCorrection }: WritingEditorProps) {
   const [text, setText] = useState("");
-  const [language, setLanguage] = useState<Language>("japanese");
-  const [level, setLevel] = useState<Level>("N5");
+  const { language: langCode, setLanguage: setContextLanguage } = useLanguage();
+  const language = codeToLanguage(langCode);
+  const [level, setLevel] = useState<Level>(langCode === "ja" ? "N5" : "A1");
   const [loading, setLoading] = useState(false);
   const [correction, setCorrection] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -58,7 +60,7 @@ export function WritingEditor({ onCorrection }: WritingEditorProps) {
   function handleLanguageChange(value: string | null) {
     if (!value) return;
     const lang = value as Language;
-    setLanguage(lang);
+    setContextLanguage(languageToCode(lang));
     // Reset level to first available for the new language
     setLevel(LEVELS[lang][0].value);
   }

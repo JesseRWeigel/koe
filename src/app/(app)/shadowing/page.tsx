@@ -6,7 +6,8 @@ import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { ShadowingPlayer } from "@/components/shadowing/shadowing-player";
 import { SkipForwardIcon } from "lucide-react";
-import { type LanguageCode, LANGUAGE_LIST, LANGUAGE_CODES } from "@/lib/languages";
+import { type LanguageCode, LANGUAGE_LIST } from "@/lib/languages";
+import { useLanguage } from "@/lib/context/language-context";
 
 interface ShadowingSentence {
   sentence: string;
@@ -58,7 +59,7 @@ const DEMO_SENTENCES: Record<string, ShadowingSentence[]> = {
 };
 
 export default function ShadowingPage() {
-  const [language, setLanguage] = useState<LanguageCode>("ja");
+  const { language, setLanguage: setContextLanguage } = useLanguage();
   const [currentIndex, setCurrentIndex] = useState(0);
 
   const sentences = DEMO_SENTENCES[language];
@@ -69,7 +70,7 @@ export default function ShadowingPage() {
   }
 
   function handleLanguageChange(lang: LanguageCode) {
-    setLanguage(lang);
+    setContextLanguage(lang);
     setCurrentIndex(0);
   }
 

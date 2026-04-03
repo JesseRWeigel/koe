@@ -8,9 +8,11 @@ import { TopicSelector } from "@/components/reader/topic-selector";
 import { ReadingPassage } from "@/components/reader/reading-passage";
 import { ReaderControls } from "@/components/reader/reader-controls";
 import type { LanguageLevel } from "@/lib/ai/system-prompts";
+import { useLanguage } from "@/lib/context/language-context";
+import type { LanguageCode } from "@/lib/languages";
 
 export default function ReadPage() {
-  const [language, setLanguage] = React.useState("ja");
+  const { language, setLanguage: setContextLanguage } = useLanguage();
   const [level, setLevel] = React.useState<LanguageLevel>("N5");
   const [passage, setPassage] = React.useState<string | null>(null);
   const [loading, setLoading] = React.useState(false);
@@ -64,7 +66,7 @@ export default function ReadPage() {
   }
 
   function handleLanguageChange(lang: string) {
-    setLanguage(lang);
+    setContextLanguage(lang as LanguageCode);
     // Reset level to appropriate default when switching language
     if (lang === "ja") {
       setLevel("N5");

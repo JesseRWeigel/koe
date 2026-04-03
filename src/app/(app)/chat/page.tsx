@@ -12,6 +12,8 @@ import {
   saveConversation,
   type Conversation,
 } from "@/lib/chat/history";
+import { useLanguage } from "@/lib/context/language-context";
+import { codeToLanguage, languageToCode } from "@/lib/languages";
 
 function extractText(message: UIMessage): string {
   return (
@@ -23,8 +25,9 @@ function extractText(message: UIMessage): string {
 }
 
 export default function ChatPage() {
-  const [language, setLanguage] = useState<Language>("japanese");
-  const [level, setLevel] = useState<Level>("N5");
+  const { language: langCode, setLanguage: setLangCode } = useLanguage();
+  const language = codeToLanguage(langCode);
+  const [level, setLevel] = useState<Level>(langCode === "ja" ? "N5" : "A1");
   const [scenario, setScenario] = useState("free");
   const [conversationId, setConversationId] = useState(() => crypto.randomUUID());
   const [conversationStartedAt, setConversationStartedAt] = useState(() => new Date());
@@ -98,7 +101,7 @@ export default function ChatPage() {
 
   const handleLanguageChange = useCallback(
     (newLanguage: Language) => {
-      setLanguage(newLanguage);
+      setLangCode(languageToCode(newLanguage));
       if (newLanguage === "japanese") {
         setLevel("N5");
       } else {
@@ -106,7 +109,7 @@ export default function ChatPage() {
       }
       startNewConversation();
     },
-    [startNewConversation]
+    [startNewConversation, setLangCode]
   );
 
   const handleLoadConversation = useCallback(
@@ -129,7 +132,7 @@ export default function ChatPage() {
 
       setConversationId(conv.id);
       setConversationStartedAt(conv.startedAt);
-      setLanguage(conv.language as Language);
+      setLangCode(languageToCode(conv.language as Language));
       setLevel(conv.level as Level);
       setMessages(
         conv.messages.map((m, i) => ({
@@ -140,7 +143,7 @@ export default function ChatPage() {
         }))
       );
     },
-    [conversationId, language, level, conversationStartedAt, setMessages]
+    [conversationId, language, level, conversationStartedAt, setMessages, setLangCode]
   );
 
   const handleSend = useCallback(

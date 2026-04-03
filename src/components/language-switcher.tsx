@@ -13,11 +13,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ChevronsUpDown } from "lucide-react";
-import { type LanguageCode, LANGUAGE_LIST } from "@/lib/languages";
+import { LANGUAGE_LIST } from "@/lib/languages";
+import { useLanguage } from "@/lib/context/language-context";
 
 export function LanguageSwitcher() {
-  const [activeLanguage, setActiveLanguage] =
-    React.useState<LanguageCode>("ja");
+  const { language: activeLanguage, setLanguage: setActiveLanguage } = useLanguage();
 
   const current = LANGUAGE_LIST.find((l) => l.code === activeLanguage)!;
 
@@ -53,7 +53,7 @@ export function LanguageSwitcher() {
             {LANGUAGE_LIST.map((lang) => (
               <DropdownMenuItem
                 key={lang.code}
-                onSelect={() => setActiveLanguage(lang.code)}
+                onClick={() => setActiveLanguage(lang.code)}
                 className="gap-2 p-2"
               >
                 <span className="text-lg">{lang.flag}</span>
