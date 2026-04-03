@@ -12,6 +12,7 @@ import {
   saveConversation,
   type Conversation,
 } from "@/lib/chat/history";
+import { recordConversation } from "@/lib/dashboard/stats";
 import { useLanguage } from "@/lib/context/language-context";
 import { codeToLanguage, languageToCode } from "@/lib/languages";
 
@@ -97,6 +98,7 @@ export default function ChatPage() {
     setConversationId(crypto.randomUUID());
     setConversationStartedAt(new Date());
     setMessages([]);
+    hasRecordedConversation.current = false;
   }, [setMessages]);
 
   const handleLanguageChange = useCallback(
@@ -146,8 +148,14 @@ export default function ChatPage() {
     [conversationId, language, level, conversationStartedAt, setMessages, setLangCode]
   );
 
+  const hasRecordedConversation = useRef(false);
+
   const handleSend = useCallback(
     (text: string) => {
+      if (!hasRecordedConversation.current) {
+        recordConversation();
+        hasRecordedConversation.current = true;
+      }
       sendMessage({ text });
     },
     [sendMessage]

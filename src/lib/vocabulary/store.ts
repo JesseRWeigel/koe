@@ -14,7 +14,48 @@ export interface VocabularyItem {
 
 export type NewVocabularyItem = Omit<VocabularyItem, "id" | "createdAt">;
 
-let words: VocabularyItem[] = [];
+const STORAGE_KEY = "koe-vocabulary";
+
+interface StoredVocabularyItem {
+  id: string;
+  word: string;
+  reading: string | null;
+  meaning: string;
+  partOfSpeech: string;
+  languageCode: string;
+  contextSentences: string[];
+  tags: string[];
+  createdAt: string;
+}
+
+function loadFromStorage(): VocabularyItem[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return [];
+    const stored = JSON.parse(raw) as StoredVocabularyItem[];
+    return stored.map((s) => ({
+      ...s,
+      languageCode: s.languageCode as LanguageCode,
+      createdAt: new Date(s.createdAt),
+    }));
+  } catch {
+    return [];
+  }
+}
+
+function saveToStorage(items: VocabularyItem[]): void {
+  try {
+    const toStore: StoredVocabularyItem[] = items.map((item) => ({
+      ...item,
+      createdAt: item.createdAt.toISOString(),
+    }));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(toStore));
+  } catch {
+    // localStorage may be unavailable (SSR, quota exceeded, etc.)
+  }
+}
+
+let words: VocabularyItem[] = loadFromStorage();
 
 let nextId = 1;
 
@@ -23,7 +64,7 @@ function generateId(): string {
 }
 
 export function resetStore(): void {
-  words = [];
+  words = loadFromStorage();
   nextId = 1;
 }
 
@@ -34,6 +75,7 @@ export function addWord(item: NewVocabularyItem): VocabularyItem {
     createdAt: new Date(),
   };
   words.push(newWord);
+  saveToStorage(words);
   return newWord;
 }
 
@@ -53,6 +95,7 @@ export function updateWord(
   const index = words.findIndex((w) => w.id === id);
   if (index === -1) return undefined;
   words[index] = { ...words[index], ...updates };
+  saveToStorage(words);
   return words[index];
 }
 
@@ -60,6 +103,7 @@ export function deleteWord(id: string): boolean {
   const index = words.findIndex((w) => w.id === id);
   if (index === -1) return false;
   words.splice(index, 1);
+  saveToStorage(words);
   return true;
 }
 

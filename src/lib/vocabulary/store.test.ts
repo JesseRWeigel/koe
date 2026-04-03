@@ -11,6 +11,7 @@ import {
 } from "./store";
 
 beforeEach(() => {
+  localStorage.clear();
   resetStore();
 });
 
@@ -214,6 +215,59 @@ describe("Vocabulary Store", () => {
 
     test("returns empty array for no matches", () => {
       expect(searchWords("xyz")).toEqual([]);
+    });
+  });
+
+  describe("localStorage persistence", () => {
+    test("persists words to localStorage when adding", () => {
+      addWord(sampleWord);
+      const stored = localStorage.getItem("koe-vocabulary");
+      expect(stored).not.toBeNull();
+      const parsed = JSON.parse(stored!);
+      expect(parsed).toHaveLength(1);
+      expect(parsed[0].word).toBe("食べる");
+    });
+
+    test("loads words from localStorage on initialization", () => {
+      // Pre-populate localStorage
+      const storedWords = [
+        {
+          id: "vocab-99",
+          word: "猫",
+          reading: "ねこ",
+          meaning: "cat",
+          partOfSpeech: "noun",
+          languageCode: "ja",
+          contextSentences: [],
+          tags: [],
+          createdAt: new Date().toISOString(),
+        },
+      ];
+      localStorage.setItem("koe-vocabulary", JSON.stringify(storedWords));
+
+      // Reset and reload from localStorage
+      resetStore();
+
+      const words = getWords();
+      expect(words).toHaveLength(1);
+      expect(words[0].word).toBe("猫");
+      expect(words[0].createdAt).toBeInstanceOf(Date);
+    });
+
+    test("persists deletion to localStorage", () => {
+      const added = addWord(sampleWord);
+      deleteWord(added.id);
+      const stored = localStorage.getItem("koe-vocabulary");
+      const parsed = JSON.parse(stored!);
+      expect(parsed).toHaveLength(0);
+    });
+
+    test("persists updates to localStorage", () => {
+      const added = addWord(sampleWord);
+      updateWord(added.id, { meaning: "to eat (updated)" });
+      const stored = localStorage.getItem("koe-vocabulary");
+      const parsed = JSON.parse(stored!);
+      expect(parsed[0].meaning).toBe("to eat (updated)");
     });
   });
 });

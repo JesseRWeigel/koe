@@ -9,6 +9,7 @@ import { resetStore, addWord } from "@/lib/vocabulary/store";
 
 describe("Dashboard Stats", () => {
   beforeEach(() => {
+    localStorage.clear();
     resetStore();
     resetStats();
   });
@@ -115,5 +116,61 @@ describe("Dashboard Stats", () => {
     const stats = getDashboardStats();
     expect(stats).toHaveProperty("streakDays");
     expect(typeof stats.streakDays).toBe("number");
+  });
+
+  describe("localStorage persistence", () => {
+    test("conversations count persists via localStorage", () => {
+      recordConversation();
+      recordConversation();
+
+      // Verify it was saved to localStorage
+      const stored = localStorage.getItem("koe-conversations");
+      expect(stored).toBe("2");
+
+      // Reset in-memory state and reload
+      resetStats();
+
+      const stats = getDashboardStats();
+      expect(stats.conversations).toBe(2);
+    });
+
+    test("review stats persist via localStorage", () => {
+      recordReview(true);
+      recordReview(true);
+      recordReview(false);
+
+      // Verify saved to localStorage
+      const stored = localStorage.getItem("koe-review-stats");
+      expect(stored).not.toBeNull();
+      const parsed = JSON.parse(stored!);
+      expect(parsed.correct).toBe(2);
+      expect(parsed.total).toBe(3);
+
+      // Reset in-memory state and reload
+      resetStats();
+
+      const stats = getDashboardStats();
+      expect(stats.retention).toBeCloseTo(66.67, 0);
+    });
+
+    test("words learned comes from persisted vocabulary store", () => {
+      addWord({
+        word: "猫",
+        reading: "ねこ",
+        meaning: "cat",
+        partOfSpeech: "noun",
+        languageCode: "ja",
+        contextSentences: [],
+        tags: [],
+      });
+
+      // Reset vocabulary in-memory store (simulating page reload)
+      // The store should reload from localStorage
+      resetStore();
+
+      const stats = getDashboardStats();
+      expect(stats.wordsLearned).toBe(1);
+      expect(stats.dueToday).toBe(1);
+    });
   });
 });
