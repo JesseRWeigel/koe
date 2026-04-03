@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Search, BookOpen } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -16,6 +16,7 @@ import {
   type NewVocabularyItem,
 } from "@/lib/vocabulary/store";
 import { type LanguageCode, LANGUAGE_LIST } from "@/lib/languages";
+import { getSeedVocabulary } from "@/lib/vocabulary/seed";
 
 const LANGUAGE_TABS = [
   { value: "all", label: "All" },
@@ -26,6 +27,19 @@ export function VocabularyList() {
   const [query, setQuery] = useState("");
   const [activeTab, setActiveTab] = useState("all");
   const [revision, setRevision] = useState(0);
+
+  // Auto-seed Japanese N5 vocabulary when the in-memory store is empty.
+  // The store is not persisted across page loads, so we seed on every mount
+  // unless the user has previously dismissed seeding via localStorage.
+  useEffect(() => {
+    if (getWords("ja").length === 0) {
+      const seedWords = getSeedVocabulary("ja");
+      for (const item of seedWords) {
+        addWord(item);
+      }
+      setRevision((r) => r + 1);
+    }
+  }, []);
 
   const languageFilter =
     activeTab === "all" ? undefined : (activeTab as LanguageCode);
