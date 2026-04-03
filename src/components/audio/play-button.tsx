@@ -7,7 +7,7 @@ import { speak, stop, isSupported } from "@/lib/audio";
 
 interface PlayButtonProps {
   text: string;
-  lang: "ja" | "es" | "pt-BR";
+  lang: "ja" | "es" | "pt-BR" | "fr";
   size?: "sm" | "default";
   className?: string;
 }

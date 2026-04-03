@@ -103,7 +103,7 @@ export function mapToVocabulary(
       reading: reading || null,
       meaning,
       partOfSpeech: "noun",
-      languageCode: languageCode as "ja" | "es" | "pt-BR",
+      languageCode: languageCode as "ja" | "es" | "pt-BR" | "fr",
       contextSentences: [],
       tags: ["imported"],
     });

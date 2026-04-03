@@ -111,19 +111,28 @@ export const LANG_MAP: Record<TTSOptions["lang"], string> = {
 
 Also update the `TTSOptions["lang"]` type to include your language code.
 
-### 6. Chat and reader UI (automatic)
+### 6. Chat UI (automatic)
 
-The language/level selectors in these files pull from the `LANGUAGES` and `LEVELS` constants:
-- `src/components/chat/chat-header.tsx`
-- `src/components/reader/reader-controls.tsx`
+The language/level selectors in `src/components/chat/chat-header.tsx` pull from the `LANGUAGES` and `LEVELS` constants in `system-prompts.ts`, so they'll automatically include your language once you update step 4.
 
-They'll automatically include your language once you update step 4. No code changes needed here.
+### 7. Additional files with hardcoded language codes
 
-### 7. Vocabulary store
+Several files contain hardcoded language code types or arrays that must be updated manually. Add your language code to each:
 
-**File**: `src/lib/vocabulary/store.ts`
+| File | What to update |
+|------|---------------|
+| `src/components/reader/reader-controls.tsx` | `languages` array (add `{ code: "xx", name: "..." }`) |
+| `src/components/vocabulary/add-word-dialog.tsx` | `LANGUAGES` array and all `"ja" \| "es" \| "pt-BR"` type annotations |
+| `src/components/vocabulary/import-dialog.tsx` | `LANGUAGES` array and all `"ja" \| "es" \| "pt-BR"` type annotations |
+| `src/components/vocabulary/vocabulary-list.tsx` | Language code cast in `languageFilter` |
+| `src/components/audio/play-button.tsx` | `lang` type in `PlayButtonProps` |
+| `src/components/shadowing/shadowing-player.tsx` | `language` type in `ShadowingPlayerProps` |
+| `src/app/(app)/shadowing/page.tsx` | `DEMO_SENTENCES` record (add demo sentences), language type, flag button |
+| `src/lib/vocabulary/store.ts` | `languageCode` type in `VocabularyItem` |
+| `src/lib/import/anki-parser.ts` | `languageCode` cast in `mapToVocabulary` |
+| `src/components/writing/writing-editor.tsx` | `getLanguageCode` switch statement |
 
-Add your language code to the `languageCode` field type in the `VocabularyItem` interface.
+> **Tip**: Search the codebase for `"ja" | "es" | "pt-BR"` to find any remaining hardcoded language unions. All of them need your new code added.
 
 ### 8. Tests
 
@@ -145,10 +154,13 @@ pnpm build
 pnpm dev
 ```
 
-Try all three AI features with your language:
+Try all features with your language:
 - **Chat** (`/chat`): Have a conversation, check the level adaptation
 - **Read** (`/read`): Generate a passage, verify vocabulary level
 - **Grammar** (`/grammar`): Ask about a grammar pattern
+- **Shadowing** (`/shadowing`): Verify your flag button appears and demo sentences load
+- **Vocabulary** (`/vocabulary`): Check your language tab appears, try adding a word
+- **Writing** (`/writing`): Verify your language is selectable
 
 ## Tips for writing good AI prompts
 

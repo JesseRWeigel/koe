@@ -15,6 +15,7 @@ const languages = [
   { code: "ja", name: "Japanese" },
   { code: "es", name: "Spanish" },
   { code: "pt-BR", name: "Portuguese" },
+  { code: "fr", name: "French" },
 ] as const;
 
 const jlptLevels: LanguageLevel[] = ["N5", "N4", "N3", "N2", "N1"];

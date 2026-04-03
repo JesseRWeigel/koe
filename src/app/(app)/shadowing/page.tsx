@@ -44,10 +44,20 @@ const DEMO_SENTENCES: Record<string, ShadowingSentence[]> = {
     { sentence: "Quanto custa?", meaning: "How much does it cost?" },
     { sentence: "Estou aprendendo português", meaning: "I am learning Portuguese" },
   ],
+  fr: [
+    { sentence: "Bonjour", meaning: "Hello / Good morning" },
+    { sentence: "Merci beaucoup", meaning: "Thank you very much" },
+    { sentence: "Comment allez-vous ?", meaning: "How are you?" },
+    { sentence: "Je m'appelle...", meaning: "My name is..." },
+    { sentence: "Où sont les toilettes ?", meaning: "Where is the bathroom?" },
+    { sentence: "Je ne comprends pas", meaning: "I don't understand" },
+    { sentence: "Combien ça coûte ?", meaning: "How much does it cost?" },
+    { sentence: "J'apprends le français", meaning: "I am learning French" },
+  ],
 };
 
 export default function ShadowingPage() {
-  const [language, setLanguage] = useState<"ja" | "es" | "pt-BR">("ja");
+  const [language, setLanguage] = useState<"ja" | "es" | "pt-BR" | "fr">("ja");
   const [currentIndex, setCurrentIndex] = useState(0);
 
   const sentences = DEMO_SENTENCES[language];
@@ -57,7 +67,7 @@ export default function ShadowingPage() {
     setCurrentIndex((i) => (i + 1) % sentences.length);
   }
 
-  function handleLanguageChange(lang: "ja" | "es" | "pt-BR") {
+  function handleLanguageChange(lang: "ja" | "es" | "pt-BR" | "fr") {
     setLanguage(lang);
     setCurrentIndex(0);
   }
@@ -69,14 +79,14 @@ export default function ShadowingPage() {
         <Separator orientation="vertical" className="mr-2 h-4" />
         <h1 className="text-lg font-semibold">Shadowing Practice</h1>
         <div className="ml-auto flex gap-2">
-          {(["ja", "es", "pt-BR"] as const).map((lang) => (
+          {(["ja", "es", "pt-BR", "fr"] as const).map((lang) => (
             <Button
               key={lang}
               variant={language === lang ? "default" : "outline"}
               size="sm"
               onClick={() => handleLanguageChange(lang)}
             >
-              {lang === "ja" ? "🇯🇵" : lang === "es" ? "🇪🇸" : "🇧🇷"}
+              {lang === "ja" ? "🇯🇵" : lang === "es" ? "🇪🇸" : lang === "pt-BR" ? "🇧🇷" : "🇫🇷"}
             </Button>
           ))}
         </div>

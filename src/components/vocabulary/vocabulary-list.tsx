@@ -30,7 +30,7 @@ export function VocabularyList() {
   const [revision, setRevision] = useState(0);
 
   const languageFilter =
-    activeTab === "all" ? undefined : (activeTab as "ja" | "es" | "pt-BR");
+    activeTab === "all" ? undefined : (activeTab as "ja" | "es" | "pt-BR" | "fr");
 
   const words = useMemo(() => {
     // revision is used to trigger re-computation

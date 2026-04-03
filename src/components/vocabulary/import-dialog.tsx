@@ -40,6 +40,7 @@ const LANGUAGES = [
   { code: "ja", label: "Japanese" },
   { code: "es", label: "Spanish" },
   { code: "pt-BR", label: "Portuguese" },
+  { code: "fr", label: "French" },
 ] as const;
 
 const FIELD_OPTIONS = [
@@ -51,7 +52,7 @@ const FIELD_OPTIONS = [
 
 interface ImportDialogProps {
   onImport: (items: NewVocabularyItem[]) => void;
-  defaultLanguage?: "ja" | "es" | "pt-BR";
+  defaultLanguage?: "ja" | "es" | "pt-BR" | "fr";
 }
 
 export function ImportDialog({
@@ -61,7 +62,7 @@ export function ImportDialog({
   const [open, setOpen] = useState(false);
   const [cards, setCards] = useState<ImportedCard[]>([]);
   const [columnMappings, setColumnMappings] = useState<string[]>([]);
-  const [languageCode, setLanguageCode] = useState<"ja" | "es" | "pt-BR">(
+  const [languageCode, setLanguageCode] = useState<"ja" | "es" | "pt-BR" | "fr">(
     defaultLanguage
   );
   const [importedCount, setImportedCount] = useState<number | null>(null);
@@ -191,7 +192,7 @@ export function ImportDialog({
             <Select
               value={languageCode}
               onValueChange={(val: string | null) => {
-                if (val) setLanguageCode(val as "ja" | "es" | "pt-BR");
+                if (val) setLanguageCode(val as "ja" | "es" | "pt-BR" | "fr");
               }}
             >
               <SelectTrigger className="w-full" id="import-language">

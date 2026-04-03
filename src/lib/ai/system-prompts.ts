@@ -33,11 +33,11 @@ export const LEVELS: Record<Language, { value: Level; label: string }[]> = {
     { value: "C1", label: "C1 (Advanced)" },
   ],
   french: [
-  { value: "A1", label: "A1 (Beginner)" },
-  { value: "A2", label: "A2 (Elementary)" },
-  { value: "B1", label: "B1 (Intermediate)" },
-  { value: "B2", label: "B2 (Upper Intermediate)" },
-  { value: "C1", label: "C1 (Advanced)" },
+    { value: "A1", label: "A1 (Beginner)" },
+    { value: "A2", label: "A2 (Elementary)" },
+    { value: "B1", label: "B1 (Intermediate)" },
+    { value: "B2", label: "B2 (Upper Intermediate)" },
+    { value: "C1", label: "C1 (Advanced)" },
   ],
 };
 
@@ -137,7 +137,7 @@ function getLanguageSpecificGrammarInstructions(language: GrammarLanguage): stri
 - Explain ser vs estar in the Portuguese context
 - Cover pronoun placement rules (proclisis, enclisis, mesoclisis)
 - Note differences between European and Brazilian Portuguese where relevant`;
-  case "fr":
+    case "fr":
       return `For French grammar:
 - Explain verb tense and mood — especially the subjunctive (subjonctif) and when it is required
 - Clarify être vs avoir as auxiliary verbs in compound tenses (passé composé agreement rules)

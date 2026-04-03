@@ -22,7 +22,7 @@ interface ShadowingPlayerProps {
   sentence: string;
   reading?: string;
   meaning: string;
-  language: "ja" | "es" | "pt-BR";
+  language: "ja" | "es" | "pt-BR" | "fr";
 }
 
 export function ShadowingPlayer({
