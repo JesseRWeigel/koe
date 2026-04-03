@@ -21,6 +21,7 @@ const LANGUAGE_TABS = [
   { value: "ja", label: "Japanese" },
   { value: "es", label: "Spanish" },
   { value: "pt-BR", label: "Portuguese" },
+  { value: "fr", label: "French" },
 ] as const;
 
 export function VocabularyList() {

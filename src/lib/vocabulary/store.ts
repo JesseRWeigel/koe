@@ -4,7 +4,7 @@ export interface VocabularyItem {
   reading: string | null;
   meaning: string;
   partOfSpeech: string;
-  languageCode: "ja" | "es" | "pt-BR";
+  languageCode: "ja" | "es" | "pt-BR" | "fr";
   contextSentences: string[];
   tags: string[];
   createdAt: Date;

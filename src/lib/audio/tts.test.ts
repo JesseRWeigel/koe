@@ -34,7 +34,9 @@ function createMockSpeechSynthesis() {
       { lang: "ja-JP", name: "Japanese Voice" },
       { lang: "es-ES", name: "Spanish Voice" },
       { lang: "pt-BR", name: "Portuguese Voice" },
+      { lang: "fr-FR", name: "French Voice" },
       { lang: "en-US", name: "English Voice" },
+      {},
     ]),
     speaking: false,
     paused: false,
@@ -67,6 +69,7 @@ describe("TTS Service", () => {
         ja: "ja-JP",
         es: "es-ES",
         "pt-BR": "pt-BR",
+        fr: "fr-FR",
       });
     });
   });
@@ -103,7 +106,8 @@ describe("TTS Service", () => {
       speak("こんにちは", { lang: "ja" });
 
       expect(mockSynthesis.speak).toHaveBeenCalledOnce();
-      const utterance = mockSynthesis.speak.mock.calls[0][0] as SpeechSynthesisUtterance;
+      const utterance = mockSynthesis.speak.mock
+        .calls[0][0] as SpeechSynthesisUtterance;
       expect(utterance.lang).toBe("ja-JP");
       expect(utterance.text).toBe("こんにちは");
     });
@@ -111,42 +115,57 @@ describe("TTS Service", () => {
     it("calls speechSynthesis.speak with Spanish lang tag", () => {
       speak("hola", { lang: "es" });
 
-      const utterance = mockSynthesis.speak.mock.calls[0][0] as SpeechSynthesisUtterance;
+      const utterance = mockSynthesis.speak.mock
+        .calls[0][0] as SpeechSynthesisUtterance;
       expect(utterance.lang).toBe("es-ES");
     });
 
     it("calls speechSynthesis.speak with Portuguese lang tag", () => {
       speak("olá", { lang: "pt-BR" });
 
-      const utterance = mockSynthesis.speak.mock.calls[0][0] as SpeechSynthesisUtterance;
+      const utterance = mockSynthesis.speak.mock
+        .calls[0][0] as SpeechSynthesisUtterance;
       expect(utterance.lang).toBe("pt-BR");
+    });
+
+    it("calls speechSynthesis.speak with French lang tag", () => {
+      speak("bonjour", { lang: "fr" });
+
+      const utterance = mockSynthesis.speak.mock
+        .calls[0][0] as SpeechSynthesisUtterance;
+      expect(utterance.lang).toBe("fr-FR");
+      expect(utterance.text).toBe("bonjour");
     });
 
     it("uses default rate of 1.0 when not specified", () => {
       speak("test", { lang: "ja" });
 
-      const utterance = mockSynthesis.speak.mock.calls[0][0] as SpeechSynthesisUtterance;
+      const utterance = mockSynthesis.speak.mock
+        .calls[0][0] as SpeechSynthesisUtterance;
       expect(utterance.rate).toBe(1.0);
     });
 
     it("clamps rate to minimum 0.5", () => {
       speak("test", { lang: "ja", rate: 0.1 });
 
-      const utterance = mockSynthesis.speak.mock.calls[0][0] as SpeechSynthesisUtterance;
+      const utterance = mockSynthesis.speak.mock
+        .calls[0][0] as SpeechSynthesisUtterance;
       expect(utterance.rate).toBe(0.5);
     });
 
     it("clamps rate to maximum 2.0", () => {
       speak("test", { lang: "ja", rate: 5.0 });
 
-      const utterance = mockSynthesis.speak.mock.calls[0][0] as SpeechSynthesisUtterance;
+      const utterance = mockSynthesis.speak.mock
+        .calls[0][0] as SpeechSynthesisUtterance;
       expect(utterance.rate).toBe(2.0);
     });
 
     it("accepts rate within valid range", () => {
       speak("test", { lang: "ja", rate: 1.5 });
 
-      const utterance = mockSynthesis.speak.mock.calls[0][0] as SpeechSynthesisUtterance;
+      const utterance = mockSynthesis.speak.mock
+        .calls[0][0] as SpeechSynthesisUtterance;
       expect(utterance.rate).toBe(1.5);
     });
 

@@ -18,6 +18,7 @@ const languages = [
   { code: "ja", name: "Japanese", flag: "🇯🇵" },
   { code: "es", name: "Spanish", flag: "🇪🇸" },
   { code: "pt-BR", name: "Portuguese", flag: "🇧🇷" },
+  { code: "fr", name: "French", flag: "🇫🇷" },
 ] as const;
 
 export type LanguageCode = (typeof languages)[number]["code"];
