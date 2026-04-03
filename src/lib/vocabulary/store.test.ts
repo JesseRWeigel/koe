@@ -7,10 +7,14 @@ import {
   deleteWord,
   searchWords,
   resetStore,
+  loadFromStorage,
+  saveToStorage,
+  VOCAB_STORAGE_KEY,
   type VocabularyItem,
 } from "./store";
 
 beforeEach(() => {
+  localStorage.clear();
   resetStore();
 });
 
@@ -214,6 +218,59 @@ describe("Vocabulary Store", () => {
 
     test("returns empty array for no matches", () => {
       expect(searchWords("xyz")).toEqual([]);
+    });
+  });
+
+  describe("localStorage persistence", () => {
+    test("addWord auto-persists to localStorage", () => {
+      addWord(sampleWord);
+      const stored = localStorage.getItem(VOCAB_STORAGE_KEY);
+      expect(stored).not.toBeNull();
+      const parsed = JSON.parse(stored!);
+      expect(parsed).toHaveLength(1);
+      expect(parsed[0].word).toBe("食べる");
+    });
+
+    test("loadFromStorage restores words after resetStore", () => {
+      addWord(sampleWord);
+      resetStore();
+      expect(getWords()).toHaveLength(0);
+
+      loadFromStorage();
+      const words = getWords();
+      expect(words).toHaveLength(1);
+      expect(words[0].word).toBe("食べる");
+      expect(words[0].createdAt).toBeInstanceOf(Date);
+    });
+
+    test("loadFromStorage handles empty localStorage", () => {
+      loadFromStorage();
+      expect(getWords()).toHaveLength(0);
+    });
+
+    test("loadFromStorage handles invalid JSON", () => {
+      localStorage.setItem(VOCAB_STORAGE_KEY, "not-json");
+      loadFromStorage();
+      expect(getWords()).toHaveLength(0);
+    });
+
+    test("updateWord persists changes", () => {
+      const added = addWord(sampleWord);
+      updateWord(added.id, { meaning: "to eat (updated)" });
+
+      resetStore();
+      loadFromStorage();
+      const found = getWord(added.id);
+      expect(found!.meaning).toBe("to eat (updated)");
+    });
+
+    test("deleteWord persists removal", () => {
+      const added = addWord(sampleWord);
+      deleteWord(added.id);
+
+      resetStore();
+      loadFromStorage();
+      expect(getWords()).toHaveLength(0);
     });
   });
 });
