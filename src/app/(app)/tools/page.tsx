@@ -4,8 +4,16 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
 import { ContentGrader } from "@/components/tools/content-grader";
 import { CognateBrowser } from "@/components/languages/cognate-browser";
+import { useLanguage } from "@/lib/context/language-context";
+import type { LanguageCode } from "@/lib/languages";
+
+/** Languages for which the Cognates Browser is relevant. */
+const COGNATE_LANGUAGES: ReadonlySet<LanguageCode> = new Set(["es", "pt-BR"]);
 
 export default function ToolsPage() {
+  const { language } = useLanguage();
+  const showCognates = COGNATE_LANGUAGES.has(language);
+
   return (
     <>
       <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
@@ -25,18 +33,30 @@ export default function ToolsPage() {
           <ContentGrader />
         </section>
 
-        <Separator />
+        {showCognates && (
+          <>
+            <Separator />
 
-        <section>
-          <h2 className="mb-3 text-base font-semibold">
-            Spanish ↔ Portuguese Cognates
-          </h2>
-          <p className="text-muted-foreground mb-4 text-sm">
-            Browse cognates between Spanish and Portuguese, and watch out for
-            false friends — words that look similar but have different meanings.
+            <section>
+              <h2 className="mb-3 text-base font-semibold">
+                Spanish ↔ Portuguese Cognates
+              </h2>
+              <p className="text-muted-foreground mb-4 text-sm">
+                Browse cognates between Spanish and Portuguese, and watch out for
+                false friends — words that look similar but have different
+                meanings.
+              </p>
+              <CognateBrowser />
+            </section>
+          </>
+        )}
+
+        {!showCognates && (
+          <p className="text-muted-foreground text-sm">
+            No additional language-specific tools are available for the selected
+            language. Switch to Spanish or Portuguese for cognate browsing.
           </p>
-          <CognateBrowser />
-        </section>
+        )}
       </main>
     </>
   );

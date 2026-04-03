@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useLanguage } from "@/lib/context/language-context";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -35,8 +36,14 @@ interface GradeResult {
 }
 
 export function ContentGrader() {
+  const { language: activeLanguage } = useLanguage();
   const [text, setText] = useState("");
-  const [language, setLanguage] = useState("ja");
+  const [language, setLanguage] = useState(activeLanguage);
+
+  // Keep local selector in sync when the global language changes
+  useEffect(() => {
+    setLanguage(activeLanguage);
+  }, [activeLanguage]);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<GradeResult | null>(null);
   const [error, setError] = useState<string | null>(null);
