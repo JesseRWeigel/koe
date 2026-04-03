@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -9,8 +9,9 @@ import {
   MicIcon,
   RotateCcwIcon,
   Volume2Icon,
+  LoaderIcon,
 } from "lucide-react";
-import { speak, stop as stopTTS } from "@/lib/audio/tts";
+import { speak, stop as stopTTS, ensureVoicesReady } from "@/lib/audio/tts";
 import {
   startRecording,
   stopRecording,
@@ -36,14 +37,37 @@ export function ShadowingPlayer({
     "listen" | "recording" | "compare" | "idle"
   >("idle");
   const [recordingUrl, setRecordingUrl] = useState<string | null>(null);
+  const [voicesReady, setVoicesReady] = useState(false);
+  const cancelledRef = useRef(false);
 
-  const handleListen = useCallback(() => {
+  // Pre-load voices on mount so "Listen" works on first click
+  useEffect(() => {
+    let mounted = true;
+    ensureVoicesReady().then(() => {
+      if (mounted) setVoicesReady(true);
+    });
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const handleListen = useCallback(async () => {
+    cancelledRef.current = false;
     setPhase("listen");
-    speak(sentence, { lang: language, rate: 0.8 });
-    // Estimate speech duration and auto-transition
-    setTimeout(() => {
+
+    // Ensure voices are loaded (usually instant after first load)
+    await ensureVoicesReady();
+
+    try {
+      await speak(sentence, { lang: language, rate: 0.8 });
+    } catch {
+      // Utterance was cancelled or errored — ignore
+    }
+
+    // Only transition to idle if we weren't cancelled/reset
+    if (!cancelledRef.current) {
       setPhase("idle");
-    }, sentence.length * 200 + 1000);
+    }
   }, [sentence, language]);
 
   const handleRecord = useCallback(async () => {
@@ -68,8 +92,12 @@ export function ShadowingPlayer({
     }, 200);
   }, []);
 
-  const handlePlayOriginal = useCallback(() => {
-    speak(sentence, { lang: language, rate: 0.8 });
+  const handlePlayOriginal = useCallback(async () => {
+    try {
+      await speak(sentence, { lang: language, rate: 0.8 });
+    } catch {
+      // cancelled — ignore
+    }
   }, [sentence, language]);
 
   const handlePlayRecording = useCallback(() => {
@@ -80,6 +108,7 @@ export function ShadowingPlayer({
   }, [recordingUrl]);
 
   const handleReset = useCallback(() => {
+    cancelledRef.current = true;
     stopTTS();
     resetRecorder();
     setRecordingUrl(null);
@@ -103,12 +132,20 @@ export function ShadowingPlayer({
           <div className="flex gap-2">
             <Button
               onClick={handleListen}
-              disabled={phase === "recording"}
+              disabled={phase === "recording" || !voicesReady}
               variant={phase === "listen" ? "default" : "outline"}
               size="lg"
             >
-              <Volume2Icon className="mr-2 h-5 w-5" />
-              {phase === "listen" ? "Playing..." : "1. Listen"}
+              {!voicesReady ? (
+                <LoaderIcon className="mr-2 h-5 w-5 animate-spin" />
+              ) : (
+                <Volume2Icon className="mr-2 h-5 w-5" />
+              )}
+              {!voicesReady
+                ? "Loading..."
+                : phase === "listen"
+                  ? "Playing..."
+                  : "1. Listen"}
             </Button>
           </div>
 

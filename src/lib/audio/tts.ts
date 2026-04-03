@@ -31,24 +31,66 @@ export function getAvailableVoices(lang: TTSOptions["lang"]): SpeechSynthesisVoi
   return window.speechSynthesis.getVoices().filter((v) => v.lang === bcp47);
 }
 
-/** Speak the given text using the browser SpeechSynthesis API */
-export function speak(text: string, options: TTSOptions): void {
-  if (!isSupported()) return;
+/**
+ * Ensure voices are loaded. On many browsers, getVoices() returns an empty
+ * array until the voiceschanged event fires. This helper waits for that event
+ * if needed, with a timeout so callers are never stuck forever.
+ */
+export function ensureVoicesReady(): Promise<void> {
+  if (!isSupported()) return Promise.resolve();
+
+  // Voices already loaded
+  if (window.speechSynthesis.getVoices().length > 0) {
+    return Promise.resolve();
+  }
+
+  return new Promise<void>((resolve) => {
+    const onReady = () => {
+      window.speechSynthesis.removeEventListener("voiceschanged", onReady);
+      resolve();
+    };
+    window.speechSynthesis.addEventListener("voiceschanged", onReady);
+
+    // Timeout after 2 seconds — speak without a matched voice rather than hang
+    setTimeout(() => {
+      window.speechSynthesis.removeEventListener("voiceschanged", onReady);
+      resolve();
+    }, 2000);
+  });
+}
+
+/**
+ * Speak the given text using the browser SpeechSynthesis API.
+ * Returns a Promise that resolves when the utterance finishes, or rejects on
+ * error. The small delay between cancel() and speak() works around a browser
+ * bug where the new utterance is silently dropped.
+ */
+export function speak(text: string, options: TTSOptions): Promise<void> {
+  if (!isSupported()) return Promise.resolve();
 
   // Cancel any current speech first
   window.speechSynthesis.cancel();
 
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = LANG_MAP[options.lang];
-  utterance.rate = Math.min(2.0, Math.max(0.5, options.rate ?? 1.0));
+  return new Promise<void>((resolve, reject) => {
+    // Small delay after cancel — some browsers (Chrome, Edge) swallow the new
+    // utterance when speak() is called in the same micro-task as cancel().
+    setTimeout(() => {
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = LANG_MAP[options.lang];
+      utterance.rate = Math.min(2.0, Math.max(0.5, options.rate ?? 1.0));
 
-  // Try to select a voice matching the language
-  const voices = getAvailableVoices(options.lang);
-  if (voices.length > 0) {
-    utterance.voice = voices[0];
-  }
+      // Try to select a voice matching the language
+      const voices = getAvailableVoices(options.lang);
+      if (voices.length > 0) {
+        utterance.voice = voices[0];
+      }
 
-  window.speechSynthesis.speak(utterance);
+      utterance.onend = () => resolve();
+      utterance.onerror = (event) => reject(event);
+
+      window.speechSynthesis.speak(utterance);
+    }, 50);
+  });
 }
 
 /** Stop any current speech */
