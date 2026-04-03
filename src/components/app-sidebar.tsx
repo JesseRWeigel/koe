@@ -26,6 +26,7 @@ import {
   PenLineIcon,
   AudioLinesIcon,
   BookTextIcon,
+  BookMarkedIcon,
   ActivityIcon,
   WrenchIcon,
   SettingsIcon,
@@ -81,6 +82,11 @@ const navItems = [
     title: "Pitch",
     url: "/pitch",
     icon: ActivityIcon,
+  },
+  {
+    title: "Guides",
+    url: "/guides",
+    icon: BookMarkedIcon,
   },
   {
     title: "Tools",
