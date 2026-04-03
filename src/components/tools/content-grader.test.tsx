@@ -2,6 +2,10 @@ import { describe, it, expect, vi, afterEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { ContentGrader } from "./content-grader";
 
+vi.mock("@/lib/context/language-context", () => ({
+  useLanguage: () => ({ language: "ja", setLanguage: vi.fn() }),
+}));
+
 const mockFetch = vi.fn();
 vi.stubGlobal("fetch", mockFetch);
 
