@@ -6,6 +6,7 @@ import { Separator } from "@/components/ui/separator";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { PitchDiagram } from "@/components/kanji/pitch-diagram";
+import { PlayButton } from "@/components/audio/play-button";
 import {
   getPitchEntries,
   getPitchByPattern,
@@ -95,7 +96,15 @@ export default function PitchPage() {
             <Card key={entry.word}>
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
-                  <span className="text-2xl">{entry.word}</span>
+                  <span className="flex items-center gap-1">
+                    <span className="text-2xl">{entry.word}</span>
+                    <PlayButton
+                      text={entry.reading}
+                      lang="ja"
+                      rate={0.75}
+                      size="sm"
+                    />
+                  </span>
                   <Badge variant={PATTERN_COLORS[entry.pattern]}>
                     {entry.pattern}
                   </Badge>
