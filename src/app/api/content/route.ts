@@ -1,14 +1,12 @@
 import { streamText } from "ai";
 import { getModel } from "@/lib/ai";
-import {
-  buildReaderSystemPrompt,
-  type LanguageLevel,
-} from "@/lib/ai/system-prompts";
+import { buildReaderSystemPrompt, type LanguageLevel } from "@/lib/ai/system-prompts";
+import type { LanguageCode } from "@/lib/languages";
 
 export async function POST(req: Request) {
   try {
     const { language, level, topic } = (await req.json()) as {
-      language: string;
+      language: LanguageCode;
       level: LanguageLevel;
       topic: string;
     };

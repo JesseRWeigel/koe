@@ -1,15 +1,13 @@
 import { streamText } from "ai";
 import { getModel } from "@/lib/ai";
-import {
-  buildGrammarSystemPrompt,
-  type GrammarLanguage,
-} from "@/lib/ai/system-prompts";
+import { buildGrammarSystemPrompt } from "@/lib/ai/system-prompts";
+import type { LanguageCode } from "@/lib/languages";
 
 export async function POST(req: Request) {
   const { text, context, language } = (await req.json()) as {
     text: string;
     context?: string;
-    language: GrammarLanguage;
+    language: LanguageCode;
   };
 
   if (!text || !language) {

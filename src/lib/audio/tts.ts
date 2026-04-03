@@ -1,18 +1,17 @@
+import { type LanguageCode, LANGUAGES, LANGUAGE_CODES } from "@/lib/languages";
+
 export type TTSProvider = "browser" | "elevenlabs";
 
 export interface TTSOptions {
-  lang: "ja" | "es" | "pt-BR" | "fr";
+  lang: LanguageCode;
   rate?: number; // 0.5 - 2.0, default 1.0
   provider?: TTSProvider;
 }
 
-/** Map language codes to BCP-47 voice tags */
-export const LANG_MAP: Record<TTSOptions["lang"], string> = {
-  ja: "ja-JP",
-  es: "es-ES",
-  "pt-BR": "pt-BR",
-  fr: "fr-FR",
-};
+/** Map language codes to BCP-47 voice tags — derived from LANGUAGES. */
+export const LANG_MAP: Record<LanguageCode, string> = Object.fromEntries(
+  LANGUAGE_CODES.map((code) => [code, LANGUAGES[code].bcp47]),
+) as Record<LanguageCode, string>;
 
 /** Check if TTS is available in the current environment */
 export function isSupported(): boolean {

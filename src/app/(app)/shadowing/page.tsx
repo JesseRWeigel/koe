@@ -6,6 +6,7 @@ import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { ShadowingPlayer } from "@/components/shadowing/shadowing-player";
 import { SkipForwardIcon } from "lucide-react";
+import { type LanguageCode, LANGUAGE_LIST, LANGUAGE_CODES } from "@/lib/languages";
 
 interface ShadowingSentence {
   sentence: string;
@@ -57,7 +58,7 @@ const DEMO_SENTENCES: Record<string, ShadowingSentence[]> = {
 };
 
 export default function ShadowingPage() {
-  const [language, setLanguage] = useState<"ja" | "es" | "pt-BR" | "fr">("ja");
+  const [language, setLanguage] = useState<LanguageCode>("ja");
   const [currentIndex, setCurrentIndex] = useState(0);
 
   const sentences = DEMO_SENTENCES[language];
@@ -67,7 +68,7 @@ export default function ShadowingPage() {
     setCurrentIndex((i) => (i + 1) % sentences.length);
   }
 
-  function handleLanguageChange(lang: "ja" | "es" | "pt-BR" | "fr") {
+  function handleLanguageChange(lang: LanguageCode) {
     setLanguage(lang);
     setCurrentIndex(0);
   }
@@ -79,14 +80,14 @@ export default function ShadowingPage() {
         <Separator orientation="vertical" className="mr-2 h-4" />
         <h1 className="text-lg font-semibold">Shadowing Practice</h1>
         <div className="ml-auto flex gap-2">
-          {(["ja", "es", "pt-BR", "fr"] as const).map((lang) => (
+          {LANGUAGE_LIST.map((lang) => (
             <Button
-              key={lang}
-              variant={language === lang ? "default" : "outline"}
+              key={lang.code}
+              variant={language === lang.code ? "default" : "outline"}
               size="sm"
-              onClick={() => handleLanguageChange(lang)}
+              onClick={() => handleLanguageChange(lang.code)}
             >
-              {lang === "ja" ? "🇯🇵" : lang === "es" ? "🇪🇸" : lang === "pt-BR" ? "🇧🇷" : "🇫🇷"}
+              {lang.flag}
             </Button>
           ))}
         </div>

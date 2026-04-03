@@ -35,13 +35,7 @@ import {
   type ImportMapping,
 } from "@/lib/import";
 import type { NewVocabularyItem } from "@/lib/vocabulary/store";
-
-const LANGUAGES = [
-  { code: "ja", label: "Japanese" },
-  { code: "es", label: "Spanish" },
-  { code: "pt-BR", label: "Portuguese" },
-  { code: "fr", label: "French" },
-] as const;
+import { type LanguageCode, LANGUAGE_LIST } from "@/lib/languages";
 
 const FIELD_OPTIONS = [
   { value: "skip", label: "Skip" },
@@ -52,7 +46,7 @@ const FIELD_OPTIONS = [
 
 interface ImportDialogProps {
   onImport: (items: NewVocabularyItem[]) => void;
-  defaultLanguage?: "ja" | "es" | "pt-BR" | "fr";
+  defaultLanguage?: LanguageCode;
 }
 
 export function ImportDialog({
@@ -62,7 +56,7 @@ export function ImportDialog({
   const [open, setOpen] = useState(false);
   const [cards, setCards] = useState<ImportedCard[]>([]);
   const [columnMappings, setColumnMappings] = useState<string[]>([]);
-  const [languageCode, setLanguageCode] = useState<"ja" | "es" | "pt-BR" | "fr">(
+  const [languageCode, setLanguageCode] = useState<LanguageCode>(
     defaultLanguage
   );
   const [importedCount, setImportedCount] = useState<number | null>(null);
@@ -192,14 +186,14 @@ export function ImportDialog({
             <Select
               value={languageCode}
               onValueChange={(val: string | null) => {
-                if (val) setLanguageCode(val as "ja" | "es" | "pt-BR" | "fr");
+                if (val) setLanguageCode(val as LanguageCode);
               }}
             >
               <SelectTrigger className="w-full" id="import-language">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {LANGUAGES.map((lang) => (
+                {LANGUAGE_LIST.map((lang) => (
                   <SelectItem key={lang.code} value={lang.code}>
                     {lang.label}
                   </SelectItem>

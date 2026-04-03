@@ -10,13 +10,7 @@ import {
 } from "@/components/ui/select";
 import { RefreshCwIcon, LoaderIcon } from "lucide-react";
 import type { LanguageLevel } from "@/lib/ai/system-prompts";
-
-const languages = [
-  { code: "ja", name: "Japanese" },
-  { code: "es", name: "Spanish" },
-  { code: "pt-BR", name: "Portuguese" },
-  { code: "fr", name: "French" },
-] as const;
+import { LANGUAGE_LIST } from "@/lib/languages";
 
 const jlptLevels: LanguageLevel[] = ["N5", "N4", "N3", "N2", "N1"];
 const cefrLevels: LanguageLevel[] = ["A1", "A2", "B1", "B2", "C1", "C2"];
@@ -47,9 +41,9 @@ export function ReaderControls({
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          {languages.map((lang) => (
+          {LANGUAGE_LIST.map((lang) => (
             <SelectItem key={lang.code} value={lang.code}>
-              {lang.name}
+              {lang.label}
             </SelectItem>
           ))}
         </SelectContent>

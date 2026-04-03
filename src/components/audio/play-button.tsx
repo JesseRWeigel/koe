@@ -4,10 +4,11 @@ import { useState, useCallback, useEffect } from "react";
 import { Volume2Icon, VolumeXIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { speak, stop, isSupported } from "@/lib/audio";
+import type { LanguageCode } from "@/lib/languages";
 
 interface PlayButtonProps {
   text: string;
-  lang: "ja" | "es" | "pt-BR" | "fr";
+  lang: LanguageCode;
   size?: "sm" | "default";
   className?: string;
 }

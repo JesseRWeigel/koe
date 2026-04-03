@@ -15,13 +15,11 @@ import {
   type VocabularyItem,
   type NewVocabularyItem,
 } from "@/lib/vocabulary/store";
+import { type LanguageCode, LANGUAGE_LIST } from "@/lib/languages";
 
 const LANGUAGE_TABS = [
   { value: "all", label: "All" },
-  { value: "ja", label: "Japanese" },
-  { value: "es", label: "Spanish" },
-  { value: "pt-BR", label: "Portuguese" },
-  { value: "fr", label: "French" },
+  ...LANGUAGE_LIST.map((l) => ({ value: l.code, label: l.label })),
 ] as const;
 
 export function VocabularyList() {
@@ -30,7 +28,7 @@ export function VocabularyList() {
   const [revision, setRevision] = useState(0);
 
   const languageFilter =
-    activeTab === "all" ? undefined : (activeTab as "ja" | "es" | "pt-BR" | "fr");
+    activeTab === "all" ? undefined : (activeTab as LanguageCode);
 
   const words = useMemo(() => {
     // revision is used to trigger re-computation

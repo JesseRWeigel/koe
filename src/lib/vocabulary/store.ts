@@ -1,10 +1,12 @@
+import type { LanguageCode } from "@/lib/languages";
+
 export interface VocabularyItem {
   id: string;
   word: string;
   reading: string | null;
   meaning: string;
   partOfSpeech: string;
-  languageCode: "ja" | "es" | "pt-BR" | "fr";
+  languageCode: LanguageCode;
   contextSentences: string[];
   tags: string[];
   createdAt: Date;

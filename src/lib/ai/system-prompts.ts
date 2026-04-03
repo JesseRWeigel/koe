@@ -1,14 +1,19 @@
-export type Language = "japanese" | "spanish" | "portuguese" | "french";
+import {
+  type Language,
+  type LanguageCode,
+  LANGUAGE_LIST,
+  codeToLabel,
+} from "@/lib/languages";
+
+export type { Language, LanguageCode } from "@/lib/languages";
 export type JapaneseLevel = "N5" | "N4" | "N3" | "N2" | "N1";
 export type CEFRLevel = "A1" | "A2" | "B1" | "B2" | "C1";
 export type Level = JapaneseLevel | CEFRLevel;
 
-export const LANGUAGES: { value: Language; label: string }[] = [
-  { value: "japanese", label: "Japanese" },
-  { value: "spanish", label: "Spanish" },
-  { value: "portuguese", label: "Portuguese" },
-  { value: "french", label: "French" },
-];
+export const LANGUAGES = LANGUAGE_LIST.map((l) => ({
+  value: l.name,
+  label: l.label,
+}));
 
 export const LEVELS: Record<Language, { value: Level; label: string }[]> = {
   japanese: [
@@ -51,16 +56,8 @@ export const SCENARIOS = [
 ];
 
 function getLanguageName(language: Language): string {
-  switch (language) {
-    case "japanese":
-      return "Japanese";
-    case "spanish":
-      return "Spanish";
-    case "portuguese":
-      return "Portuguese";
-    case "french":
-      return "French";
-  }
+  const entry = LANGUAGE_LIST.find((l) => l.name === language);
+  return entry!.label;
 }
 
 function getLevelInstructions(language: Language, level: Level): string {
@@ -99,22 +96,13 @@ function getScenarioInstructions(scenario: string): string {
   }
 }
 
-export type GrammarLanguage = "ja" | "es" | "pt-BR" | "fr";
-
-function getGrammarLanguageName(language: GrammarLanguage): string {
-  switch (language) {
-    case "ja":
-      return "Japanese";
-    case "es":
-      return "Spanish";
-    case "pt-BR":
-      return "Brazilian Portuguese";
-    case "fr":
-      return "French";
-  }
+/** Grammar/writing prompts use "Brazilian Portuguese" instead of just "Portuguese". */
+function getLanguageCodeName(language: LanguageCode): string {
+  if (language === "pt-BR") return "Brazilian Portuguese";
+  return codeToLabel(language);
 }
 
-function getLanguageSpecificGrammarInstructions(language: GrammarLanguage): string {
+function getLanguageSpecificGrammarInstructions(language: LanguageCode): string {
   switch (language) {
     case "ja":
       return `For Japanese grammar:
@@ -148,8 +136,8 @@ function getLanguageSpecificGrammarInstructions(language: GrammarLanguage): stri
   }
 }
 
-export function buildGrammarSystemPrompt(language: GrammarLanguage): string {
-  const langName = getGrammarLanguageName(language);
+export function buildGrammarSystemPrompt(language: LanguageCode): string {
+  const langName = getLanguageCodeName(language);
   const languageSpecific = getLanguageSpecificGrammarInstructions(language);
 
   return `You are an expert ${langName} grammar teacher. Your job is to explain grammar patterns clearly and concisely to English-speaking learners.
@@ -181,18 +169,11 @@ const READER_LEVEL_DESCRIPTIONS: Record<LanguageLevel, string> = {
   C2: "mastery (CEFR C2): near-native fluency, any topic, subtle nuance and style",
 };
 
-const READER_LANGUAGE_NAMES: Record<string, string> = {
-  ja: "Japanese",
-  es: "Spanish",
-  "pt-BR": "Brazilian Portuguese",
-  fr: "French",
-};
-
 export function buildReaderSystemPrompt(
-  language: string,
+  language: LanguageCode,
   level: LanguageLevel
 ): string {
-  const languageName = READER_LANGUAGE_NAMES[language] || language;
+  const languageName = getLanguageCodeName(language);
   const levelDesc = READER_LEVEL_DESCRIPTIONS[level] || level;
 
   const furiganaInstruction =
@@ -216,7 +197,7 @@ Guidelines:
 - Paragraphs should flow naturally with logical progression`;
 }
 
-function getWritingLanguageSpecificGuidance(language: GrammarLanguage): string {
+function getWritingLanguageSpecificGuidance(language: LanguageCode): string {
   switch (language) {
     case "ja":
       return `Pay special attention to:
@@ -250,8 +231,8 @@ function getWritingLanguageSpecificGuidance(language: GrammarLanguage): string {
   }
 }
 
-export function buildWritingCorrectionPrompt(language: GrammarLanguage): string {
-  const langName = getGrammarLanguageName(language);
+export function buildWritingCorrectionPrompt(language: LanguageCode): string {
+  const langName = getLanguageCodeName(language);
   const languageGuidance = getWritingLanguageSpecificGuidance(language);
 
   return `You are an encouraging ${langName} writing tutor. Your job is to help learners improve their ${langName} writing by providing constructive feedback.

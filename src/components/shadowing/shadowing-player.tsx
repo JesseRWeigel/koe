@@ -17,12 +17,13 @@ import {
   getRecorderState,
   resetRecorder,
 } from "@/lib/audio/recorder";
+import type { LanguageCode } from "@/lib/languages";
 
 interface ShadowingPlayerProps {
   sentence: string;
   reading?: string;
   meaning: string;
-  language: "ja" | "es" | "pt-BR" | "fr";
+  language: LanguageCode;
 }
 
 export function ShadowingPlayer({

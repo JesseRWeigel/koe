@@ -12,12 +12,8 @@ import {
 } from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
 import { Loader2Icon, PenLineIcon, SparklesIcon, LightbulbIcon } from "lucide-react";
-import {
-  LANGUAGES,
-  LEVELS,
-  type Language,
-  type Level,
-} from "@/lib/ai/system-prompts";
+import { LANGUAGES, LEVELS, type Language, type Level } from "@/lib/ai/system-prompts";
+import { languageToCode } from "@/lib/languages";
 
 const WRITING_PROMPTS = [
   "Describe your day today",
@@ -44,16 +40,7 @@ interface WritingEditorProps {
 }
 
 function getLanguageCode(language: Language): string {
-  switch (language) {
-    case "japanese":
-      return "ja";
-    case "spanish":
-      return "es";
-    case "portuguese":
-      return "pt-BR";
-    case "french":
-      return "fr";
-  }
+  return languageToCode(language);
 }
 
 function countWords(text: string): number {

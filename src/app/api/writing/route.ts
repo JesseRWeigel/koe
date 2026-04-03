@@ -1,14 +1,12 @@
 import { streamText } from "ai";
 import { getModel } from "@/lib/ai";
-import {
-  buildWritingCorrectionPrompt,
-  type GrammarLanguage,
-} from "@/lib/ai/system-prompts";
+import { buildWritingCorrectionPrompt } from "@/lib/ai/system-prompts";
+import type { LanguageCode } from "@/lib/languages";
 
 export async function POST(req: Request) {
   const { text, language, level } = (await req.json()) as {
     text: string;
-    language: GrammarLanguage;
+    language: LanguageCode;
     level: string;
   };
 

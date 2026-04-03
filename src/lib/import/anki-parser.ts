@@ -1,4 +1,5 @@
 import type { NewVocabularyItem } from "@/lib/vocabulary/store";
+import type { LanguageCode } from "@/lib/languages";
 
 export interface ImportedCard {
   fields: string[];
@@ -103,7 +104,7 @@ export function mapToVocabulary(
       reading: reading || null,
       meaning,
       partOfSpeech: "noun",
-      languageCode: languageCode as "ja" | "es" | "pt-BR" | "fr",
+      languageCode: languageCode as LanguageCode,
       contextSentences: [],
       tags: ["imported"],
     });

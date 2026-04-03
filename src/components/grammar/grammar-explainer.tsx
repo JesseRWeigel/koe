@@ -11,18 +11,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Loader2Icon, SparklesIcon } from "lucide-react";
-import type { GrammarLanguage } from "@/lib/ai/system-prompts";
-
-const GRAMMAR_LANGUAGES: { value: GrammarLanguage; label: string }[] = [
-  { value: "ja", label: "Japanese" },
-  { value: "es", label: "Spanish" },
-  { value: "pt-BR", label: "Portuguese (BR)" },
-];
+import { type LanguageCode, LANGUAGE_LIST } from "@/lib/languages";
 
 export interface GrammarExplanation {
   id: string;
   text: string;
-  language: GrammarLanguage;
+  language: LanguageCode;
   explanation: string;
   createdAt: Date;
 }
@@ -34,7 +28,7 @@ interface GrammarExplainerProps {
 export function GrammarExplainer({ onExplanation }: GrammarExplainerProps) {
   const [text, setText] = useState("");
   const [context, setContext] = useState("");
-  const [language, setLanguage] = useState<GrammarLanguage>("ja");
+  const [language, setLanguage] = useState<LanguageCode>("ja");
   const [loading, setLoading] = useState(false);
   const [explanation, setExplanation] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -107,13 +101,13 @@ export function GrammarExplainer({ onExplanation }: GrammarExplainerProps) {
         </div>
         <div className="space-y-2">
           <label className="text-sm font-medium leading-none">Language</label>
-          <Select value={language} onValueChange={(v) => setLanguage(v as GrammarLanguage)}>
+          <Select value={language} onValueChange={(v) => setLanguage(v as LanguageCode)}>
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {GRAMMAR_LANGUAGES.map((lang) => (
-                <SelectItem key={lang.value} value={lang.value}>
+              {LANGUAGE_LIST.map((lang) => (
+                <SelectItem key={lang.code} value={lang.code}>
                   {lang.label}
                 </SelectItem>
               ))}

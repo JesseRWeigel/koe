@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/select";
 import { Plus } from "lucide-react";
 import type { NewVocabularyItem } from "@/lib/vocabulary/store";
+import { type LanguageCode, LANGUAGE_LIST } from "@/lib/languages";
 
 const PARTS_OF_SPEECH = [
   "noun",
@@ -36,16 +37,9 @@ const PARTS_OF_SPEECH = [
   "expression",
 ] as const;
 
-const LANGUAGES = [
-  { code: "ja", label: "Japanese" },
-  { code: "es", label: "Spanish" },
-  { code: "pt-BR", label: "Portuguese" },
-  { code: "fr", label: "French" },
-] as const;
-
 interface AddWordDialogProps {
   onAdd: (item: NewVocabularyItem) => void;
-  defaultLanguage?: "ja" | "es" | "pt-BR" | "fr";
+  defaultLanguage?: LanguageCode;
 }
 
 export function AddWordDialog({
@@ -57,7 +51,7 @@ export function AddWordDialog({
   const [reading, setReading] = useState("");
   const [meaning, setMeaning] = useState("");
   const [partOfSpeech, setPartOfSpeech] = useState("noun");
-  const [languageCode, setLanguageCode] = useState<"ja" | "es" | "pt-BR" | "fr">(
+  const [languageCode, setLanguageCode] = useState<LanguageCode>(
     defaultLanguage
   );
   const [tagsInput, setTagsInput] = useState("");
@@ -118,14 +112,14 @@ export function AddWordDialog({
               <Select
                 value={languageCode}
                 onValueChange={(val: string | null) => {
-                  if (val) setLanguageCode(val as "ja" | "es" | "pt-BR" | "fr");
+                  if (val) setLanguageCode(val as LanguageCode);
                 }}
               >
                 <SelectTrigger className="w-full" id="language">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {LANGUAGES.map((lang) => (
+                  {LANGUAGE_LIST.map((lang) => (
                     <SelectItem key={lang.code} value={lang.code}>
                       {lang.label}
                     </SelectItem>

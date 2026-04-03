@@ -13,21 +13,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ChevronsUpDown } from "lucide-react";
-
-const languages = [
-  { code: "ja", name: "Japanese", flag: "🇯🇵" },
-  { code: "es", name: "Spanish", flag: "🇪🇸" },
-  { code: "pt-BR", name: "Portuguese", flag: "🇧🇷" },
-  { code: "fr", name: "French", flag: "🇫🇷" },
-] as const;
-
-export type LanguageCode = (typeof languages)[number]["code"];
+import { type LanguageCode, LANGUAGE_LIST } from "@/lib/languages";
 
 export function LanguageSwitcher() {
   const [activeLanguage, setActiveLanguage] =
     React.useState<LanguageCode>("ja");
 
-  const current = languages.find((l) => l.code === activeLanguage)!;
+  const current = LANGUAGE_LIST.find((l) => l.code === activeLanguage)!;
 
   return (
     <SidebarMenu>
@@ -45,7 +37,7 @@ export function LanguageSwitcher() {
               {current.flag}
             </div>
             <div className="grid flex-1 text-left text-sm leading-tight">
-              <span className="truncate font-semibold">{current.name}</span>
+              <span className="truncate font-semibold">{current.label}</span>
               <span className="text-muted-foreground truncate text-xs">
                 Active language
               </span>
@@ -58,14 +50,14 @@ export function LanguageSwitcher() {
             side="bottom"
             sideOffset={4}
           >
-            {languages.map((lang) => (
+            {LANGUAGE_LIST.map((lang) => (
               <DropdownMenuItem
                 key={lang.code}
                 onSelect={() => setActiveLanguage(lang.code)}
                 className="gap-2 p-2"
               >
                 <span className="text-lg">{lang.flag}</span>
-                <span>{lang.name}</span>
+                <span>{lang.label}</span>
               </DropdownMenuItem>
             ))}
           </DropdownMenuContent>
