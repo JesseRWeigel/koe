@@ -45,6 +45,7 @@ describe("Pitch Page Audio", () => {
   let mockSynthesis: ReturnType<typeof createMockSpeechSynthesis>;
 
   beforeEach(() => {
+    vi.useFakeTimers();
     mockSynthesis = createMockSpeechSynthesis();
     Object.defineProperty(window, "speechSynthesis", {
       value: mockSynthesis,
@@ -54,6 +55,7 @@ describe("Pitch Page Audio", () => {
   });
 
   afterEach(() => {
+    vi.useRealTimers();
     vi.restoreAllMocks();
   });
 
@@ -72,6 +74,7 @@ describe("Pitch Page Audio", () => {
 
     const playButtons = screen.getAllByRole("button", { name: "Play audio" });
     fireEvent.click(playButtons[0]);
+    vi.advanceTimersByTime(100);
 
     expect(mockSynthesis.cancel).toHaveBeenCalled();
     expect(mockSynthesis.speak).toHaveBeenCalledOnce();
@@ -85,6 +88,7 @@ describe("Pitch Page Audio", () => {
 
     const playButtons = screen.getAllByRole("button", { name: "Play audio" });
     fireEvent.click(playButtons[0]);
+    vi.advanceTimersByTime(100);
 
     const utterance = mockSynthesis.speak.mock.calls[0][0] as MockSpeechSynthesisUtterance;
     expect(utterance.rate).toBe(0.75);
@@ -95,6 +99,7 @@ describe("Pitch Page Audio", () => {
 
     const playButtons = screen.getAllByRole("button", { name: "Play audio" });
     fireEvent.click(playButtons[0]);
+    vi.advanceTimersByTime(100);
 
     const utterance = mockSynthesis.speak.mock.calls[0][0] as MockSpeechSynthesisUtterance;
     // The spoken text should be a hiragana reading, not kanji
