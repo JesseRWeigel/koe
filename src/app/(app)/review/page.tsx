@@ -27,7 +27,7 @@ import {
 } from "@/lib/srs/srs-storage";
 import {
   getWords,
-  loadFromStorage,
+  resetStore,
   type VocabularyItem,
 } from "@/lib/vocabulary/store";
 import { useLanguage } from "@/lib/context/language-context";
@@ -56,7 +56,7 @@ export default function ReviewPage() {
   const [state, setState] = useState<PageState>({ kind: "loading" });
 
   useEffect(() => {
-    loadFromStorage();
+    resetStore();
     const allWords = getWords(language);
 
     if (allWords.length === 0) {
