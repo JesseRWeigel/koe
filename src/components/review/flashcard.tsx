@@ -63,13 +63,17 @@ export function Flashcard({ card, onReveal, revealed }: FlashcardProps) {
           )}
         </div>
 
-        {/* Back */}
+        {/* Back — only render content when revealed to prevent flash on card transition */}
         <div className="absolute inset-0 flex min-h-[280px] flex-col items-center justify-center rounded-xl bg-card p-8 ring-1 ring-foreground/10 [backface-visibility:hidden] [transform:rotateY(180deg)]">
-          <p className="text-2xl font-semibold">{card.meaning}</p>
-          {card.exampleSentence && (
-            <p className="text-muted-foreground mt-4 text-center text-sm italic">
-              {card.exampleSentence}
-            </p>
+          {revealed && (
+            <>
+              <p className="text-2xl font-semibold">{card.meaning}</p>
+              {card.exampleSentence && (
+                <p className="text-muted-foreground mt-4 text-center text-sm italic">
+                  {card.exampleSentence}
+                </p>
+              )}
+            </>
           )}
         </div>
       </div>
