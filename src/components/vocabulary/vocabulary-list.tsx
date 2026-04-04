@@ -16,30 +16,35 @@ import {
   type NewVocabularyItem,
 } from "@/lib/vocabulary/store";
 import { type LanguageCode, LANGUAGE_LIST } from "@/lib/languages";
+import { useLanguage } from "@/lib/context/language-context";
 import { getSeedVocabulary } from "@/lib/vocabulary/seed";
 
-const LANGUAGE_TABS = [
-  { value: "all", label: "All" },
-  ...LANGUAGE_LIST.map((l) => ({ value: l.code, label: l.label })),
-] as const;
-
 export function VocabularyList() {
+  const { language: activeLanguage } = useLanguage();
   const [query, setQuery] = useState("");
-  const [activeTab, setActiveTab] = useState("all");
+  const [activeTab, setActiveTab] = useState<string>(activeLanguage);
   const [revision, setRevision] = useState(0);
 
-  // Auto-seed Japanese N5 vocabulary when the in-memory store is empty.
-  // The store is not persisted across page loads, so we seed on every mount
-  // unless the user has previously dismissed seeding via localStorage.
+  // When the global language changes, switch the active tab to match
   useEffect(() => {
-    if (getWords("ja").length === 0) {
-      const seedWords = getSeedVocabulary("ja");
+    setActiveTab(activeLanguage);
+  }, [activeLanguage]);
+
+  // Auto-seed vocabulary for languages that have seed data
+  useEffect(() => {
+    const seedWords = getSeedVocabulary(activeLanguage);
+    if (seedWords.length > 0 && getWords(activeLanguage).length === 0) {
       for (const item of seedWords) {
         addWord(item);
       }
       setRevision((r) => r + 1);
     }
-  }, []);
+  }, [activeLanguage]);
+
+  const VOCAB_TABS = [
+    { value: "all", label: "All" },
+    ...LANGUAGE_LIST.map((l) => ({ value: l.code, label: l.label })),
+  ];
 
   const languageFilter =
     activeTab === "all" ? undefined : (activeTab as LanguageCode);
@@ -88,24 +93,24 @@ export function VocabularyList() {
         </div>
         <ImportDialog
           onImport={handleImport}
-          defaultLanguage={languageFilter ?? "ja"}
+          defaultLanguage={activeLanguage}
         />
         <AddWordDialog
           onAdd={handleAdd}
-          defaultLanguage={languageFilter ?? "ja"}
+          defaultLanguage={activeLanguage}
         />
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
-          {LANGUAGE_TABS.map((tab) => (
+          {VOCAB_TABS.map((tab) => (
             <TabsTrigger key={tab.value} value={tab.value}>
               {tab.label}
             </TabsTrigger>
           ))}
         </TabsList>
 
-        {LANGUAGE_TABS.map((tab) => (
+        {VOCAB_TABS.map((tab) => (
           <TabsContent key={tab.value} value={tab.value}>
             {words.length === 0 ? (
               <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">

@@ -16,6 +16,8 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { LanguageSwitcher } from "@/components/language-switcher";
+import { useLanguage } from "@/lib/context/language-context";
+import type { LanguageCode } from "@/lib/languages";
 import {
   LayoutDashboardIcon,
   RepeatIcon,
@@ -32,7 +34,14 @@ import {
   SettingsIcon,
 } from "lucide-react";
 
-const navItems = [
+interface NavItem {
+  title: string;
+  url: string;
+  icon: React.ComponentType;
+  languages?: LanguageCode[];
+}
+
+const navItems: NavItem[] = [
   {
     title: "Dashboard",
     url: "/dashboard",
@@ -77,11 +86,13 @@ const navItems = [
     title: "Kanji",
     url: "/kanji",
     icon: BookTextIcon,
+    languages: ["ja"],
   },
   {
     title: "Pitch",
     url: "/pitch",
     icon: ActivityIcon,
+    languages: ["ja"],
   },
   {
     title: "Guides",
@@ -97,6 +108,11 @@ const navItems = [
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname();
+  const { language } = useLanguage();
+
+  const visibleNavItems = navItems.filter(
+    (item) => !item.languages || item.languages.includes(language),
+  );
 
   return (
     <Sidebar collapsible="icon" {...props}>
@@ -125,7 +141,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <SidebarGroup>
           <SidebarGroupLabel>Learn</SidebarGroupLabel>
           <SidebarMenu>
-            {navItems.map((item) => (
+            {visibleNavItems.map((item) => (
               <SidebarMenuItem key={item.title}>
                 <SidebarMenuButton
                   render={<a href={item.url} />}
