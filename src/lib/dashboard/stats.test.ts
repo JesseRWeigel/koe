@@ -124,7 +124,7 @@ describe("Dashboard Stats", () => {
       recordConversation();
 
       // Verify it was saved to localStorage
-      const stored = localStorage.getItem("koe-conversations");
+      const stored = localStorage.getItem("koe-conversation-count-v2");
       expect(stored).toBe("2");
 
       // Reset in-memory state and reload

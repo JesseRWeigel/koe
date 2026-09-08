@@ -1,4 +1,8 @@
 import { getWords } from "@/lib/vocabulary/store";
+import {
+  loadConversationCount,
+  saveConversationCount,
+} from "@/lib/conversation-storage";
 
 export interface DashboardStats {
   wordsLearned: number;
@@ -8,7 +12,6 @@ export interface DashboardStats {
   streakDays: number;
 }
 
-const CONVERSATIONS_KEY = "koe-conversations";
 const REVIEW_STATS_KEY = "koe-review-stats";
 const STREAK_KEY = "koe-streak";
 
@@ -20,23 +23,6 @@ interface ReviewStats {
 interface StreakData {
   lastStudyDate: string | null;
   currentStreak: number;
-}
-
-function loadConversationCount(): number {
-  try {
-    const raw = localStorage.getItem(CONVERSATIONS_KEY);
-    if (!raw) return 0;
-    const val = parseInt(raw, 10);
-    return isNaN(val) ? 0 : val;
-  } catch {
-    return 0;
-  }
-}
-
-function saveConversationCount(count: number): void {
-  try {
-    localStorage.setItem(CONVERSATIONS_KEY, String(count));
-  } catch {}
 }
 
 function loadReviewStats(): ReviewStats {
@@ -74,7 +60,7 @@ function saveStreak(data: StreakData): void {
 // In-memory cache loaded from localStorage
 let reviewsCorrect = 0;
 let reviewsTotal = 0;
-let conversationCount = 0;
+let conversationCount: number | undefined = 0;
 let lastStudyDate: string | null = null;
 let currentStreak = 0;
 
@@ -103,6 +89,10 @@ export function recordReview(correct: boolean): void {
 }
 
 export function recordConversation(): void {
+  if (conversationCount === undefined) {
+    conversationCount = loadConversationCount();
+    if (conversationCount === undefined) return;
+  }
   conversationCount++;
   saveConversationCount(conversationCount);
   updateStreak();
@@ -141,7 +131,7 @@ export function getDashboardStats(languageCode?: string): DashboardStats {
     wordsLearned,
     dueToday,
     retention,
-    conversations: conversationCount,
+    conversations: conversationCount ?? 0,
     streakDays: currentStreak,
   };
 }

@@ -1,4 +1,8 @@
-const STORAGE_KEY = "koe-conversations";
+import {
+  loadConversationHistory,
+  saveConversationHistory,
+  type StoredConversation,
+} from "@/lib/conversation-storage";
 
 export interface Conversation {
   id: string;
@@ -8,26 +12,12 @@ export interface Conversation {
   messages: { role: "user" | "assistant"; text: string }[];
 }
 
-interface StoredConversation {
-  id: string;
-  language: string;
-  level: string;
-  startedAt: string;
-  messages: { role: "user" | "assistant"; text: string }[];
-}
-
 function readAll(): StoredConversation[] {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
-    return JSON.parse(raw) as StoredConversation[];
-  } catch {
-    return [];
-  }
+  return loadConversationHistory() ?? [];
 }
 
 function writeAll(conversations: StoredConversation[]): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(conversations));
+  saveConversationHistory(conversations);
 }
 
 function toStored(conv: Conversation): StoredConversation {
@@ -51,7 +41,8 @@ function fromStored(stored: StoredConversation): Conversation {
 export function saveConversation(conv: Conversation): void {
   if (conv.messages.length === 0) return;
 
-  const all = readAll();
+  const all = loadConversationHistory();
+  if (all === undefined) return;
   const index = all.findIndex((c) => c.id === conv.id);
 
   if (index >= 0) {
@@ -84,6 +75,8 @@ export function getConversation(id: string): Conversation | undefined {
  * Delete a conversation by id.
  */
 export function deleteConversation(id: string): void {
-  const all = readAll().filter((c) => c.id !== id);
+  const stored = loadConversationHistory();
+  if (stored === undefined) return;
+  const all = stored.filter((c) => c.id !== id);
   writeAll(all);
 }
