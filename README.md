@@ -73,7 +73,18 @@ Most language apps are great at getting you started (A1-A2) but abandon you at t
 
 1. Create a [Vercel](https://vercel.com/) project
 2. Enable AI Gateway in the Vercel dashboard
-3. Run `vercel link && vercel env pull` to get OIDC credentials
+3. Set `AI_GATEWAY_API_KEY` for local development, or run `vercel link && vercel env pull` to get `VERCEL_OIDC_TOKEN`
+4. Set `DEFAULT_AI_PROVIDER=gateway`; requests then use the Vercel AI Gateway endpoint and the `GATEWAY_*_MODEL` for their purpose
+
+Without an API key, the Gateway SDK resolves OIDC from Vercel request context
+or the environment and can refresh linked development tokens. Missing
+authentication fails before the gateway request is sent. Provider diagnostics
+report this mode as `sdk-managed` without exposing or claiming a credential.
+
+`AI_GATEWAY_BASE_URL` defaults to `https://ai-gateway.vercel.sh/v3/ai`.
+An override must be the final HTTPS gateway endpoint and cannot contain URL
+credentials, a query string, or a fragment. Redirects are rejected so gateway
+credentials are sent only to that configured endpoint.
 
 ### Installation
 
@@ -109,8 +120,12 @@ OLLAMA_BASE_URL="http://localhost:11434"  # Default Ollama URL
 DEFAULT_AI_PROVIDER="ollama"              # or "gateway" for cloud
 
 # AI Provider - Cloud (Vercel AI Gateway)
-# These are auto-provisioned by `vercel env pull`
-# VERCEL_OIDC_TOKEN is managed automatically
+AI_GATEWAY_API_KEY="..."                 # Local gateway authentication
+# Or use VERCEL_OIDC_TOKEN from `vercel env pull` / Vercel deployment
+AI_GATEWAY_BASE_URL="https://ai-gateway.vercel.sh/v3/ai"
+GATEWAY_CHAT_MODEL="anthropic/claude-sonnet-4.6"
+GATEWAY_GRAMMAR_MODEL="anthropic/claude-haiku-4.5"
+GATEWAY_CONTENT_MODEL="anthropic/claude-sonnet-4.6"
 
 # Text-to-Speech (optional, for pronunciation)
 ELEVENLABS_API_KEY="..."                  # Optional, browser TTS used as fallback
