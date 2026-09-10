@@ -113,3 +113,14 @@ export const grammarPoints = pgTable("grammar_points", {
   level: text("level").notNull(),
   examples: jsonb("examples"),
 });
+
+// Shared hosted-mode AI rate window and concurrency lease.
+// The subject is HMAC hashed before storage; raw identity claims are never persisted.
+export const aiRouteBudgets = pgTable("ai_route_budgets", {
+  subjectHash: text("subject_hash").primaryKey(),
+  windowStartedAt: timestamp("window_started_at", { withTimezone: true }).notNull(),
+  requestCount: integer("request_count").notNull(),
+  leaseId: text("lease_id"),
+  leaseExpiresAt: timestamp("lease_expires_at", { withTimezone: true }),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});

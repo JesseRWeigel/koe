@@ -433,7 +433,7 @@ describe("local request boundary", () => {
     for (const headers of [
       { Origin: "https://evil.example" },
       { "Sec-Fetch-Site": "cross-site" },
-    ]) {
+    ] as Array<Record<string, string>>) {
       const result = await beginAiRequest(
         new Request("http://localhost/api/grade", {
           method: "POST",
@@ -446,5 +446,238 @@ describe("local request boundary", () => {
       expect(result.ok).toBe(false);
       if (!result.ok) expect(result.response.status).toBe(403);
     }
+  });
+});
+describe("JWT rejection and browser-cookie contract", () => {
+  it("preserves an issuer without a trailing slash and verifies it exactly", async () => {
+    hostedEnv();
+    process.env.AI_AUTH_ISSUER = "https://login.example.com";
+    const config = getAiRouteConfig();
+    expect(config.mode).toBe("hosted");
+    if (config.mode !== "hosted") return;
+    expect(config.issuer).toBe("https://login.example.com");
+
+    const { publicKey, privateKey } = await generateKeyPair("RS256");
+    const jwk = await exportJWK(publicKey);
+    const token = await new SignJWT({ scope: "ai:invoke" })
+      .setProtectedHeader({ alg: "RS256", kid: "issuer-exact" })
+      .setSubject("user-123")
+      .setIssuer("https://login.example.com")
+      .setAudience("koe")
+      .setIssuedAt()
+      .setExpirationTime("5m")
+      .sign(privateKey);
+    const fetcher = vi.fn(async () => Response.json({
+      keys: [{ ...jwk, kid: "issuer-exact", alg: "RS256", use: "sig" }],
+    }));
+    await expect(authenticateHostedRequest(
+      new Request("https://koe.example.com/api/chat", {
+        method: "POST",
+        headers: { authorization: "Bearer " + token },
+      }),
+      config,
+      AbortSignal.timeout(1000),
+      fetcher,
+    )).resolves.toMatchObject({ subject: "user-123" });
+  });
+
+  it("rejects expired, wrong-claim, wrong-signature, and unscoped tokens", async () => {
+    const { publicKey, privateKey } = await generateKeyPair("RS256");
+    const { privateKey: wrongKey } = await generateKeyPair("RS256");
+    const jwk = await exportJWK(publicKey);
+    const config: HostedAiRouteConfig = {
+      mode: "hosted",
+      jwksUrl: new URL("https://matrix.example/keys"),
+      issuer: "https://matrix.example",
+      audience: "koe",
+      publicOrigin: "https://koe.example.com",
+      cookieName: "koe_session",
+      subjectSecret: "s".repeat(32),
+      databaseUrl: "postgresql://example.invalid/koe",
+    };
+    const fetcher = vi.fn(async () => Response.json({
+      keys: [{ ...jwk, kid: "matrix", alg: "RS256", use: "sig" }],
+    }));
+    const now = Math.floor(Date.now() / 1000);
+    const cases = [
+      {
+        name: "expired",
+        issuer: config.issuer,
+        audience: config.audience,
+        scope: "ai:invoke",
+        expiration: now - 5,
+        key: privateKey,
+        status: 401,
+      },
+      {
+        name: "wrong issuer",
+        issuer: "https://wrong.example",
+        audience: config.audience,
+        scope: "ai:invoke",
+        expiration: now + 300,
+        key: privateKey,
+        status: 401,
+      },
+      {
+        name: "wrong audience",
+        issuer: config.issuer,
+        audience: "other",
+        scope: "ai:invoke",
+        expiration: now + 300,
+        key: privateKey,
+        status: 401,
+      },
+      {
+        name: "wrong signature",
+        issuer: config.issuer,
+        audience: config.audience,
+        scope: "ai:invoke",
+        expiration: now + 300,
+        key: wrongKey,
+        status: 401,
+      },
+      {
+        name: "missing scope",
+        issuer: config.issuer,
+        audience: config.audience,
+        scope: "",
+        expiration: now + 300,
+        key: privateKey,
+        status: 403,
+      },
+    ];
+    for (const testCase of cases) {
+      const token = await new SignJWT({ scope: testCase.scope })
+        .setProtectedHeader({ alg: "RS256", kid: "matrix" })
+        .setSubject("user-123")
+        .setIssuer(testCase.issuer)
+        .setAudience(testCase.audience)
+        .setIssuedAt()
+        .setExpirationTime(testCase.expiration)
+        .sign(testCase.key);
+      const request = new Request("https://koe.example.com/api/chat", {
+        method: "POST",
+        headers: { authorization: "Bearer " + token },
+      });
+      await expect(
+        authenticateHostedRequest(request, config, AbortSignal.timeout(1000), fetcher),
+        testCase.name,
+      ).rejects.toMatchObject({ status: testCase.status });
+    }
+  });
+
+  it("accepts a valid cookie from the exact public origin", async () => {
+    const { publicKey, privateKey } = await generateKeyPair("RS256");
+    const jwk = await exportJWK(publicKey);
+    const config: HostedAiRouteConfig = {
+      mode: "hosted",
+      jwksUrl: new URL("https://cookie.example/keys"),
+      issuer: "https://cookie.example",
+      audience: "koe",
+      publicOrigin: "https://koe.example.com",
+      cookieName: "koe_session",
+      subjectSecret: "s".repeat(32),
+      databaseUrl: "postgresql://example.invalid/koe",
+    };
+    const token = await new SignJWT({ scope: "ai:invoke" })
+      .setProtectedHeader({ alg: "RS256", kid: "cookie" })
+      .setSubject("browser-user")
+      .setIssuer(config.issuer)
+      .setAudience(config.audience)
+      .setIssuedAt()
+      .setExpirationTime("5m")
+      .sign(privateKey);
+    const fetcher = vi.fn(async () => Response.json({
+      keys: [{ ...jwk, kid: "cookie", alg: "RS256", use: "sig" }],
+    }));
+    const request = new Request("https://koe.example.com/api/chat", {
+      method: "POST",
+      headers: {
+        cookie: "koe_session=" + token,
+        origin: "https://koe.example.com",
+      },
+    });
+    await expect(
+      authenticateHostedRequest(request, config, AbortSignal.timeout(1000), fetcher),
+    ).resolves.toMatchObject({ subject: "browser-user" });
+  });
+
+  it("rejects bearer and cookie tokens for different subjects", async () => {
+    const { publicKey, privateKey } = await generateKeyPair("RS256");
+    const jwk = await exportJWK(publicKey);
+    const config: HostedAiRouteConfig = {
+      mode: "hosted",
+      jwksUrl: new URL("https://dual.example/keys"),
+      issuer: "https://dual.example",
+      audience: "koe",
+      publicOrigin: "https://koe.example.com",
+      cookieName: "koe_session",
+      subjectSecret: "s".repeat(32),
+      databaseUrl: "postgresql://example.invalid/koe",
+    };
+    const sign = (subject: string) =>
+      new SignJWT({ scope: "ai:invoke" })
+        .setProtectedHeader({ alg: "RS256", kid: "dual" })
+        .setSubject(subject)
+        .setIssuer(config.issuer)
+        .setAudience(config.audience)
+        .setIssuedAt()
+        .setExpirationTime("5m")
+        .sign(privateKey);
+    const [bearer, cookie] = await Promise.all([sign("one"), sign("two")]);
+    const fetcher = vi.fn(async () => Response.json({
+      keys: [{ ...jwk, kid: "dual", alg: "RS256", use: "sig" }],
+    }));
+    await expect(authenticateHostedRequest(
+      new Request("https://koe.example.com/api/chat", {
+        method: "POST",
+        headers: {
+          authorization: "Bearer " + bearer,
+          cookie: "koe_session=" + cookie,
+          origin: "https://koe.example.com",
+        },
+      }),
+      config,
+      AbortSignal.timeout(1000),
+      fetcher,
+    )).rejects.toMatchObject({ status: 401 });
+  });
+
+  it("applies one cooldown to repeated unknown key IDs", async () => {
+    const { publicKey, privateKey } = await generateKeyPair("RS256");
+    const jwk = await exportJWK(publicKey);
+    const config: HostedAiRouteConfig = {
+      mode: "hosted",
+      jwksUrl: new URL("https://unknown.example/keys"),
+      issuer: "https://unknown.example",
+      audience: "koe",
+      publicOrigin: "https://koe.example.com",
+      cookieName: "koe_session",
+      subjectSecret: "s".repeat(32),
+      databaseUrl: "postgresql://example.invalid/koe",
+    };
+    const token = await new SignJWT({ scope: "ai:invoke" })
+      .setProtectedHeader({ alg: "RS256", kid: "missing" })
+      .setSubject("user-123")
+      .setIssuer(config.issuer)
+      .setAudience(config.audience)
+      .setIssuedAt()
+      .setExpirationTime("5m")
+      .sign(privateKey);
+    const fetcher = vi.fn(async () => Response.json({
+      keys: [{ ...jwk, kid: "published", alg: "RS256", use: "sig" }],
+    }));
+    for (let i = 0; i < 2; i += 1) {
+      await expect(authenticateHostedRequest(
+        new Request("https://koe.example.com/api/chat", {
+          method: "POST",
+          headers: { authorization: "Bearer " + token },
+        }),
+        config,
+        AbortSignal.timeout(1000),
+        fetcher,
+      )).rejects.toMatchObject({ status: 401 });
+    }
+    expect(fetcher).toHaveBeenCalledTimes(1);
   });
 });

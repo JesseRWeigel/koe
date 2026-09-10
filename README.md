@@ -86,6 +86,8 @@ An override must be the final HTTPS gateway endpoint and cannot contain URL
 credentials, a query string, or a fragment. Redirects are rejected so gateway
 credentials are sent only to that configured endpoint.
 
+AI endpoints default to loopback-only local mode in development and require explicit hosted authentication plus shared Postgres budgets when deployed. See [AI route deployment modes](docs/ai-route-security.md) before exposing Koe.
+
 ### Installation
 
 ```bash

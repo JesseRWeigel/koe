@@ -8,6 +8,7 @@ import {
   reviews,
   studySessions,
   grammarPoints,
+  aiRouteBudgets,
   cardTypeEnum,
   cardStateEnum,
   languageCodeEnum,
@@ -265,5 +266,17 @@ describe("grammarPoints table", () => {
   test("examples is jsonb", () => {
     const cols = getTableColumns(grammarPoints);
     expect(cols.examples.columnType).toBe("PgJsonb");
+  });
+});
+
+describe("aiRouteBudgets table", () => {
+  test("stores one shared rate window and expiring lease per subject", () => {
+    const cols = getTableColumns(aiRouteBudgets);
+    expect(cols.subjectHash.primary).toBe(true);
+    expect(cols.windowStartedAt.notNull).toBe(true);
+    expect(cols.requestCount.notNull).toBe(true);
+    expect(cols.leaseId.notNull).toBe(false);
+    expect(cols.leaseExpiresAt.notNull).toBe(false);
+    expect(cols.updatedAt.notNull).toBe(true);
   });
 });

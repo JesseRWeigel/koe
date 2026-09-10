@@ -1,27 +1,34 @@
 import { streamText } from "ai";
 import { getModel } from "@/lib/ai";
 import { buildGrammarSystemPrompt } from "@/lib/ai/system-prompts";
-import type { LanguageCode } from "@/lib/languages";
+import {
+  beginAiRequest,
+  errorResponse,
+  type GuardDependencies,
+} from "@/lib/ai/route-protection";
+import { grammarRequestSchema } from "@/lib/ai/route-schemas";
 
-export async function POST(req: Request) {
-  const { text, context, language } = (await req.json()) as {
-    text: string;
-    context?: string;
-    language: LanguageCode;
+export function createPost(dependencies: GuardDependencies = {}) {
+  return async function POST(req: Request) {
+    const access = await beginAiRequest(req, grammarRequestSchema, dependencies);
+    if (!access.ok) return access.response;
+
+    try {
+      const { text, context, language } = access.input;
+      const result = streamText({
+        model: getModel("grammar"),
+        system: buildGrammarSystemPrompt(language),
+        prompt: `Explain this grammar: "${text}"${context ? `\nContext: ${context}` : ""}`,
+        maxOutputTokens: 768,
+        maxRetries: 0,
+        abortSignal: access.signal,
+      });
+      return access.wrap(result.toTextStreamResponse());
+    } catch (error) {
+      await access.finish();
+      return errorResponse(error);
+    }
   };
-
-  if (!text || !language) {
-    return Response.json(
-      { error: "Missing required fields: text, language" },
-      { status: 400 }
-    );
-  }
-
-  const result = streamText({
-    model: getModel("grammar"),
-    system: buildGrammarSystemPrompt(language),
-    prompt: `Explain this grammar: "${text}"${context ? `\nContext: ${context}` : ""}`,
-  });
-
-  return result.toTextStreamResponse();
 }
+
+export const POST = createPost();

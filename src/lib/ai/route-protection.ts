@@ -109,6 +109,8 @@ export function getAiRouteConfig(): AiRouteConfig {
   if (subjectSecret.length < 32) {
     throw new Error("AI_LIMIT_SUBJECT_SECRET must contain at least 32 characters.");
   }
+  const issuer = requireEnv("AI_AUTH_ISSUER");
+  configuredHttpsUrl("AI_AUTH_ISSUER");
   const cookieName = process.env.AI_AUTH_COOKIE || "koe_session";
   if (!/^[A-Za-z0-9_-]{1,64}$/.test(cookieName)) {
     throw new Error("AI_AUTH_COOKIE must be a simple cookie name.");
@@ -116,7 +118,7 @@ export function getAiRouteConfig(): AiRouteConfig {
   return {
     mode,
     jwksUrl: configuredHttpsUrl("AI_AUTH_JWKS_URL"),
-    issuer: configuredHttpsUrl("AI_AUTH_ISSUER").href,
+    issuer,
     audience: requireEnv("AI_AUTH_AUDIENCE"),
     publicOrigin: configuredHttpsUrl("AI_PUBLIC_ORIGIN", true).origin,
     cookieName,

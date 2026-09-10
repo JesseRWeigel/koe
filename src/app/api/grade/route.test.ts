@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, afterEach, beforeEach } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 
 // Mock the ai module
 vi.mock("ai", () => ({
@@ -32,14 +32,14 @@ describe("POST /api/grade", () => {
     const res = await POST(makeRequest({ language: "ja" }));
     expect(res.status).toBe(400);
     const body = await res.json();
-    expect(body.error).toMatch(/text/i);
+    expect(body.error).toBe("invalid_request");
   });
 
   it("returns 400 when language is missing", async () => {
     const res = await POST(makeRequest({ text: "hello" }));
     expect(res.status).toBe(400);
     const body = await res.json();
-    expect(body.error).toMatch(/language/i);
+    expect(body.error).toBe("invalid_request");
   });
 
   it("returns parsed analysis when AI returns valid JSON", async () => {
@@ -68,10 +68,10 @@ describe("POST /api/grade", () => {
     } as never);
 
     const res = await POST(makeRequest({ text: "test text", language: "es" }));
-    expect(res.status).toBe(500);
+    expect(res.status).toBe(502);
     const body = await res.json();
-    expect(body.error).toMatch(/parse/i);
-    expect(body.raw).toBe("This is not valid JSON at all");
+    expect(body.error).toBe("invalid_ai_response");
+    expect(body).not.toHaveProperty("raw");
   });
 
   it("truncates input text to 2000 characters", async () => {
