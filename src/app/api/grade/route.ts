@@ -16,15 +16,17 @@ export function createPost(dependencies: GuardDependencies = {}) {
     try {
       const { text, language } = access.input;
       const boundedText = text.slice(0, 2000);
-      const result = await generateText({
-        model: getModel("grammar"),
-        system:
-          "You are a language difficulty analyzer. You analyze text and estimate its difficulty level for language learners. Always respond with valid JSON only, no markdown formatting or code fences.",
-        prompt: `Analyze this ${language} text and return a JSON response with: level (JLPT N5-N1 for Japanese, CEFR A1-C2 for others), estimatedComprehension (percentage a beginner would understand), wordCount, uniqueWords, difficultWords (array of objects with "word" and "meaning" keys). Text: "${boundedText}"`,
-        maxOutputTokens: 512,
-        maxRetries: 0,
-        abortSignal: access.signal,
-      });
+      const result = await access.run(
+        generateText({
+          model: getModel("grammar"),
+          system:
+            "You are a language difficulty analyzer. You analyze text and estimate its difficulty level for language learners. Always respond with valid JSON only, no markdown formatting or code fences.",
+          prompt: `Analyze this ${language} text and return a JSON response with: level (JLPT N5-N1 for Japanese, CEFR A1-C2 for others), estimatedComprehension (percentage a beginner would understand), wordCount, uniqueWords, difficultWords (array of objects with "word" and "meaning" keys). Text: "${boundedText}"`,
+          maxOutputTokens: 512,
+          maxRetries: 0,
+          abortSignal: access.signal,
+        }),
+      );
 
       let rawText = result.text.trim();
       const fenceMatch = rawText.match(/^```(?:json)?\s*\n?([\s\S]*?)\n?\s*```$/);

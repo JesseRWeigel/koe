@@ -397,6 +397,7 @@ export interface AiRequestAccess<T> {
   ok: true;
   input: T;
   signal: AbortSignal;
+  run<R>(operation: Promise<R>): Promise<R>;
   finish(): Promise<void>;
   wrap(response: Response): Response;
 }
@@ -555,6 +556,9 @@ export async function beginAiRequest<T>(
       ok: true,
       input: parsed.data,
       signal,
+      run(operation) {
+        return raceWithSignal(operation, signal);
+      },
       finish,
       wrap(response) {
         if (!response.body) {

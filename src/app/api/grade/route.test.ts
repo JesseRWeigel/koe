@@ -10,7 +10,7 @@ vi.mock("@/lib/ai", () => ({
   getModel: vi.fn(() => ({ modelId: "test-model", provider: "ollama" })),
 }));
 
-import { POST } from "./route";
+import { POST, createPost } from "./route";
 import { generateText } from "ai";
 
 const mockGenerateText = vi.mocked(generateText);
@@ -130,5 +130,60 @@ describe("POST /api/grade", () => {
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body).toEqual(analysis);
+  });
+
+  it("returns 504 and releases the lease when the provider ignores cancellation", async () => {
+    let settleProvider!: (value: { text: string }) => void;
+    const providerResult = new Promise<{ text: string }>((resolve) => {
+      settleProvider = resolve;
+    });
+    mockGenerateText.mockReturnValueOnce(providerResult as never);
+    const release = vi.fn(async () => undefined);
+    const post = createPost({
+      config: {
+        mode: "hosted",
+        jwksUrl: new URL("https://login.example.com/keys"),
+        issuer: "https://login.example.com",
+        audience: "koe",
+        publicOrigin: "https://koe.example.com",
+        cookieName: "koe_session",
+        subjectSecret: "s".repeat(32),
+        databaseUrl: "postgresql://example.invalid/koe",
+      },
+      authenticate: vi.fn(async () => ({ subject: "user-1" })),
+      store: {
+        acquire: vi.fn(async (_subjectHash, leaseId) => ({
+          allowed: true as const,
+          lease: { subjectHash: "hashed", leaseId },
+        })),
+        release,
+      },
+      deadlineMs: 10,
+    });
+
+    const responsePromise = post(makeRequest({ text: "hola", language: "es" }));
+    const responseBeforeProviderSettles = await Promise.race([
+      responsePromise,
+      new Promise<null>((resolve) => setTimeout(() => resolve(null), 100)),
+    ]);
+    settleProvider({
+      text: JSON.stringify({
+        level: "A1",
+        estimatedComprehension: 90,
+        wordCount: 1,
+        uniqueWords: 1,
+        difficultWords: [],
+      }),
+    });
+    await providerResult;
+
+    expect(responseBeforeProviderSettles).toBeInstanceOf(Response);
+    if (!(responseBeforeProviderSettles instanceof Response)) return;
+    expect(responseBeforeProviderSettles.status).toBe(504);
+    expect(await responseBeforeProviderSettles.json()).toEqual({
+      error: "request_timeout",
+      message: "The AI request timed out.",
+    });
+    expect(release).toHaveBeenCalledTimes(1);
   });
 });
