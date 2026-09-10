@@ -15,13 +15,10 @@ import {
 const MAX_TOKEN_BYTES = 8 * 1024;
 const DEFAULT_BODY_BYTES = 64 * 1024;
 const DEFAULT_DEADLINE_MS = 30_000;
+const DEFAULT_RELEASE_TIMEOUT_MS = 1_000;
 
 export class AiRouteError extends Error {
-  constructor(
-    readonly status: number,
-    readonly code: string,
-    message: string,
-  ) {
+  constructor(readonly status: number, readonly code: string, message: string) {
     super(message);
   }
 }
@@ -44,12 +41,21 @@ export interface HostedAiRouteConfig {
 export type AiRouteConfig = LocalAiRouteConfig | HostedAiRouteConfig;
 export type JwksFetcher = typeof fetch;
 
+const jwksResolvers = new WeakMap<
+  JwksFetcher,
+  Map<string, ReturnType<typeof createRemoteJWKSet>>
+>();
+
 function requireEnv(name: string): string {
   const value = process.env[name];
   if (!value || value.trim() !== value) {
     throw new Error(name + " must be configured without surrounding whitespace.");
   }
   return value;
+}
+
+function isLoopback(hostname: string): boolean {
+  return ["localhost", "127.0.0.1", "[::1]", "::1"].includes(hostname);
 }
 
 function configuredHttpsUrl(name: string, originOnly = false): URL {
@@ -63,9 +69,7 @@ function configuredHttpsUrl(name: string, originOnly = false): URL {
   const loopbackDev =
     process.env.NODE_ENV !== "production" &&
     url.protocol === "http:" &&
-    (url.hostname === "localhost" ||
-      url.hostname === "127.0.0.1" ||
-      url.hostname === "[::1]");
+    isLoopback(url.hostname);
   if (
     (url.protocol !== "https:" && !loopbackDev) ||
     url.username ||
@@ -105,13 +109,17 @@ export function getAiRouteConfig(): AiRouteConfig {
   if (subjectSecret.length < 32) {
     throw new Error("AI_LIMIT_SUBJECT_SECRET must contain at least 32 characters.");
   }
+  const cookieName = process.env.AI_AUTH_COOKIE || "koe_session";
+  if (!/^[A-Za-z0-9_-]{1,64}$/.test(cookieName)) {
+    throw new Error("AI_AUTH_COOKIE must be a simple cookie name.");
+  }
   return {
     mode,
     jwksUrl: configuredHttpsUrl("AI_AUTH_JWKS_URL"),
-    issuer: requireEnv("AI_AUTH_ISSUER"),
+    issuer: configuredHttpsUrl("AI_AUTH_ISSUER").href,
     audience: requireEnv("AI_AUTH_AUDIENCE"),
     publicOrigin: configuredHttpsUrl("AI_PUBLIC_ORIGIN", true).origin,
-    cookieName: process.env.AI_AUTH_COOKIE || "koe_session",
+    cookieName,
     subjectSecret,
     databaseUrl: requireEnv("DATABASE_URL"),
   };
@@ -125,7 +133,10 @@ async function raceWithSignal<T>(
   promise: Promise<T>,
   signal: AbortSignal,
 ): Promise<T> {
-  if (signal.aborted) throw abortError();
+  if (signal.aborted) {
+    void promise.catch(() => undefined);
+    throw abortError();
+  }
   return await new Promise<T>((resolve, reject) => {
     const onAbort = () => reject(abortError());
     signal.addEventListener("abort", onAbort, { once: true });
@@ -140,6 +151,70 @@ async function raceWithSignal<T>(
       },
     );
   });
+}
+
+function cancelReader(
+  reader: ReadableStreamDefaultReader<Uint8Array>,
+  reason?: unknown,
+): void {
+  try {
+    void reader.cancel(reason).catch(() => undefined);
+  } catch {
+    // The stream may already be errored or unlocked.
+  }
+}
+
+function validateRequestBoundary(request: Request, config: AiRouteConfig): void {
+  const mediaType = request.headers
+    .get("content-type")
+    ?.split(";", 1)[0]
+    .trim()
+    .toLowerCase();
+  if (mediaType !== "application/json") {
+    throw new AiRouteError(
+      415,
+      "unsupported_media_type",
+      "Content-Type must be application/json.",
+    );
+  }
+  if (config.mode !== "local") return;
+
+  const url = new URL(request.url);
+  if (!isLoopback(url.hostname)) {
+    throw new AiRouteError(
+      403,
+      "local_only",
+      "Local AI mode accepts loopback requests only.",
+    );
+  }
+  const host = request.headers.get("host");
+  if (host) {
+    let hostName: string;
+    try {
+      hostName = new URL("http://" + host).hostname;
+    } catch {
+      throw new AiRouteError(403, "local_only", "Invalid local request host.");
+    }
+    if (!isLoopback(hostName)) {
+      throw new AiRouteError(
+        403,
+        "local_only",
+        "Local AI mode accepts loopback requests only.",
+      );
+    }
+  }
+  const origin = request.headers.get("origin");
+  if (origin && origin !== url.origin) {
+    throw new AiRouteError(403, "invalid_origin", "Request origin is not allowed.");
+  }
+  const fetchSite = request.headers.get("sec-fetch-site");
+  if (fetchSite && fetchSite !== "same-origin" && fetchSite !== "none") {
+    throw new AiRouteError(
+      403,
+      "invalid_origin",
+      "Cross-site AI requests are not allowed.",
+    );
+  }
 }
 
 function getCookie(request: Request, name: string): string | undefined {
@@ -195,20 +270,37 @@ function hasAiScope(payload: JWTPayload): boolean {
   );
 }
 
+function getJwksResolver(
+  config: HostedAiRouteConfig,
+  fetcher: JwksFetcher,
+): ReturnType<typeof createRemoteJWKSet> {
+  let byUrl = jwksResolvers.get(fetcher);
+  if (!byUrl) {
+    byUrl = new Map();
+    jwksResolvers.set(fetcher, byUrl);
+  }
+  const key = config.jwksUrl.href;
+  let resolver = byUrl.get(key);
+  if (!resolver) {
+    resolver = createRemoteJWKSet(config.jwksUrl, {
+      timeoutDuration: 5_000,
+      cooldownDuration: 30_000,
+      [customFetch]: fetcher,
+    });
+    byUrl.set(key, resolver);
+  }
+  return resolver;
+}
+
 async function verifiedSubject(
   token: string,
   config: HostedAiRouteConfig,
   signal: AbortSignal,
   fetcher: JwksFetcher,
 ): Promise<string> {
-  const jwks = createRemoteJWKSet(config.jwksUrl, {
-    timeoutDuration: 5_000,
-    cooldownDuration: 30_000,
-    [customFetch]: fetcher,
-  });
   try {
     const result = await raceWithSignal(
-      jwtVerify(token, jwks, {
+      jwtVerify(token, getJwksResolver(config, fetcher), {
         issuer: config.issuer,
         audience: config.audience,
         algorithms: ["RS256", "ES256"],
@@ -216,11 +308,14 @@ async function verifiedSubject(
       signal,
     );
     if (
+      typeof result.payload.exp !== "number" ||
       typeof result.payload.sub !== "string" ||
       result.payload.sub.length === 0 ||
-      result.payload.sub.length > 256 ||
-      !hasAiScope(result.payload)
+      result.payload.sub.length > 256
     ) {
+      throw new AiRouteError(401, "invalid_auth", "Authentication failed.");
+    }
+    if (!hasAiScope(result.payload)) {
       throw new AiRouteError(403, "forbidden", "AI access is not allowed.");
     }
     return result.payload.sub;
@@ -275,7 +370,7 @@ export async function readBoundedJson(
       if (read.done) break;
       bytes += read.value.byteLength;
       if (bytes > maxBytes) {
-        await reader.cancel();
+        cancelReader(reader);
         throw new AiRouteError(413, "body_too_large", "Request body is too large.");
       }
       chunks.push(read.value);
@@ -317,6 +412,7 @@ export interface GuardDependencies {
   fetcher?: JwksFetcher;
   authenticate?: typeof authenticateHostedRequest;
   deadlineMs?: number;
+  releaseTimeoutMs?: number;
 }
 
 export function errorResponse(error: unknown): Response {
@@ -336,13 +432,32 @@ function subjectHash(subject: string, secret: string): string {
   return createHmac("sha256", secret).update(subject).digest("hex");
 }
 
+function settleWithin(operation: Promise<unknown>, timeoutMs: number): Promise<void> {
+  return new Promise((resolve) => {
+    const timer = setTimeout(resolve, timeoutMs);
+    operation.then(
+      () => {
+        clearTimeout(timer);
+        resolve();
+      },
+      () => {
+        clearTimeout(timer);
+        resolve();
+      },
+    );
+  });
+}
+
 async function cleanupLateGrant(
   promise: Promise<Awaited<ReturnType<AiQuotaStore["acquire"]>>>,
   store: AiQuotaStore,
+  releaseTimeoutMs: number,
 ): Promise<void> {
   try {
     const result = await promise;
-    if (result.allowed) await store.release(result.lease);
+    if (result.allowed) {
+      await settleWithin(store.release(result.lease), releaseTimeoutMs);
+    }
   } catch {
     // The lease expires even when the store remains unavailable.
   }
@@ -355,6 +470,8 @@ export async function beginAiRequest<T>(
 ): Promise<AiRequestResult<T>> {
   const timeoutController = new AbortController();
   const deadlineMs = dependencies.deadlineMs ?? DEFAULT_DEADLINE_MS;
+  const releaseTimeoutMs =
+    dependencies.releaseTimeoutMs ?? DEFAULT_RELEASE_TIMEOUT_MS;
   const timeout = setTimeout(() => timeoutController.abort(), deadlineMs);
   const signal = AbortSignal.any([request.signal, timeoutController.signal]);
   let lease: AiQuotaLease | undefined;
@@ -364,18 +481,24 @@ export async function beginAiRequest<T>(
   const finish = (): Promise<void> => {
     if (!finished) {
       clearTimeout(timeout);
-      finished = lease && store
-        ? store.release(lease).catch(() => undefined)
-        : Promise.resolve();
+      finished =
+        lease && store
+          ? settleWithin(
+              Promise.resolve().then(() => store!.release(lease!)),
+              releaseTimeoutMs,
+            )
+          : Promise.resolve();
     }
     return finished;
   };
 
   try {
     const config = dependencies.config ?? getAiRouteConfig();
+    validateRequestBoundary(request, config);
     let hash: string | undefined;
     if (config.mode === "hosted") {
-      const authenticate = dependencies.authenticate ?? authenticateHostedRequest;
+      const authenticate =
+        dependencies.authenticate ?? authenticateHostedRequest;
       const identity = await authenticate(
         request,
         config,
@@ -398,7 +521,9 @@ export async function beginAiRequest<T>(
       try {
         decision = await raceWithSignal(acquirePromise, signal);
       } catch (error) {
-        if (signal.aborted) void cleanupLateGrant(acquirePromise, store);
+        if (signal.aborted) {
+          void cleanupLateGrant(acquirePromise, store, releaseTimeoutMs);
+        }
         throw error;
       }
       if (!decision.allowed) {
@@ -418,9 +543,11 @@ export async function beginAiRequest<T>(
         };
       }
       lease = decision.lease;
+      if (signal.aborted) throw abortError();
     }
 
     signal.addEventListener("abort", () => void finish(), { once: true });
+    if (signal.aborted) throw abortError();
 
     return {
       ok: true,
@@ -444,11 +571,7 @@ export async function beginAiRequest<T>(
                 controller.enqueue(chunk.value);
               }
             } catch (error) {
-              try {
-                void reader.cancel().catch(() => undefined);
-              } catch {
-                // The provider stream may already be errored or unlocked.
-              }
+              cancelReader(reader);
               await finish();
               controller.error(
                 error instanceof AiRouteError
@@ -459,11 +582,7 @@ export async function beginAiRequest<T>(
           },
           async cancel(reason) {
             timeoutController.abort();
-            try {
-              void reader.cancel(reason).catch(() => undefined);
-            } catch {
-              // A misbehaving provider must not block lease release.
-            }
+            cancelReader(reader, reason);
             await finish();
           },
         });
