@@ -151,6 +151,35 @@ describe("Vocabulary Store", () => {
       expect(getWords()).toHaveLength(0);
     });
 
+    test("does not discard a word saved by another tab before deletion", () => {
+      const added = addWord(sampleWord);
+      const key = "koe-vocabulary";
+      const latest = JSON.parse(localStorage.getItem(key)!);
+      const readerWord = {
+        ...latest[0],
+        id: "reader-word",
+        word: "gato",
+        meaning: "cat",
+        languageCode: "es",
+        contextSentences: ["El gato duerme."],
+      };
+      localStorage.setItem(key, JSON.stringify([...latest, readerWord]));
+
+      expect(deleteWord(added.id)).toBe(true);
+      resetStore();
+      expect(getWords()).toMatchObject([{ ...readerWord, createdAt: new Date(readerWord.createdAt) }]);
+    });
+
+    test("does not overwrite unreadable storage when deleting a cached word", () => {
+      const added = addWord(sampleWord);
+      const key = "koe-vocabulary";
+      localStorage.setItem(key, "{");
+
+      expect(deleteWord(added.id)).toBe(false);
+      expect(localStorage.getItem(key)).toBe("{");
+      expect(getWord(added.id)).toBeDefined();
+    });
+
     test("returns false for non-existent id", () => {
       expect(deleteWord("non-existent")).toBe(false);
     });
