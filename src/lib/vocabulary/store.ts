@@ -28,30 +28,36 @@ interface StoredVocabularyItem {
   createdAt: string;
 }
 
+function readStoredWords(): VocabularyItem[] {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (raw === null) return [];
+  const stored = JSON.parse(raw) as StoredVocabularyItem[];
+  return stored.map((s) => ({
+    ...s,
+    languageCode: s.languageCode as LanguageCode,
+    createdAt: new Date(s.createdAt),
+  }));
+}
+
 function loadFromStorage(): VocabularyItem[] {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
-    const stored = JSON.parse(raw) as StoredVocabularyItem[];
-    return stored.map((s) => ({
-      ...s,
-      languageCode: s.languageCode as LanguageCode,
-      createdAt: new Date(s.createdAt),
-    }));
+    return readStoredWords();
   } catch {
     return [];
   }
 }
 
-function saveToStorage(items: VocabularyItem[]): void {
+function saveToStorage(items: VocabularyItem[]): boolean {
   try {
     const toStore: StoredVocabularyItem[] = items.map((item) => ({
       ...item,
       createdAt: item.createdAt.toISOString(),
     }));
     localStorage.setItem(STORAGE_KEY, JSON.stringify(toStore));
+    return true;
   } catch {
     // localStorage may be unavailable (SSR, quota exceeded, etc.)
+    return false;
   }
 }
 
@@ -77,6 +83,64 @@ export function addWord(item: NewVocabularyItem): VocabularyItem {
   words.push(newWord);
   saveToStorage(words);
   return newWord;
+}
+
+export function saveReaderWord(
+  word: string,
+  meaning: string,
+  sentence: string
+): "saved" | "already-saved" | "invalid" | "unavailable" {
+  word = word.trim();
+  meaning = meaning.trim();
+  sentence = sentence.trim();
+  if (!word || !meaning || !sentence) return "invalid";
+
+  const key = (text: string) => text.trim().normalize("NFC").toLocaleLowerCase("es");
+  // Read the current durable list rather than overwriting another tab's
+  // earlier save or treating unreadable storage as an empty vocabulary.
+  let current: VocabularyItem[];
+  try {
+    current = readStoredWords();
+    if (current.some((item) =>
+      typeof item.id !== "string" || typeof item.word !== "string" ||
+      !Array.isArray(item.contextSentences) || Number.isNaN(item.createdAt.getTime())
+    )) return "unavailable";
+  } catch {
+    return "unavailable";
+  }
+  const index = current.findIndex(
+    (item) => item.languageCode === "es" && key(item.word) === key(word)
+  );
+  const existing = current[index];
+  if (existing?.contextSentences.includes(sentence)) {
+    words = current;
+    return "already-saved";
+  }
+
+  const next = [...current];
+  if (existing) {
+    next[index] = {
+      ...existing,
+      contextSentences: [...existing.contextSentences, sentence],
+    };
+  } else {
+    let id = generateId();
+    while (current.some((item) => item.id === id)) id = generateId();
+    next.push({
+      id,
+      createdAt: new Date(),
+      word,
+      reading: null,
+      meaning,
+      partOfSpeech: "expression",
+      languageCode: "es",
+      contextSentences: [sentence],
+      tags: [],
+    });
+  }
+  if (!saveToStorage(next)) return "unavailable";
+  words = next;
+  return "saved";
 }
 
 export function getWords(languageCode?: string): VocabularyItem[] {
@@ -112,7 +176,7 @@ export function searchWords(
   languageCode?: string
 ): VocabularyItem[] {
   const lowerQuery = query.toLowerCase();
-  let filtered = languageCode
+  const filtered = languageCode
     ? words.filter((w) => w.languageCode === languageCode)
     : words;
   return filtered.filter(

@@ -14,7 +14,7 @@ import type { LanguageCode } from "@/lib/languages";
 export default function ReadPage() {
   const { language, setLanguage: setContextLanguage } = useLanguage();
   const [level, setLevel] = React.useState<LanguageLevel>("N5");
-  const [passage, setPassage] = React.useState<string | null>(null);
+  const [passage, setPassage] = React.useState<{ content: string; language: LanguageCode } | null>(null);
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [currentTopic, setCurrentTopic] = React.useState<string | null>(null);
@@ -24,7 +24,7 @@ export default function ReadPage() {
       setLoading(true);
       setError(null);
       setCurrentTopic(topic);
-      setPassage("");
+      setPassage({ content: "", language });
 
       try {
         const res = await fetch("/api/content", {
@@ -44,7 +44,7 @@ export default function ReadPage() {
           const { done, value } = await reader.read();
           if (done) break;
           const chunk = decoder.decode(value, { stream: true });
-          setPassage(prev => (prev || "") + chunk);
+          setPassage(prev => prev && { ...prev, content: prev.content + chunk });
         }
       } catch (err) {
         setError(
@@ -144,7 +144,7 @@ export default function ReadPage() {
 
         {passage !== null && !error && (
           <>
-            <ReadingPassage content={passage} />
+            <ReadingPassage content={passage.content} canSaveSpanish={!loading && passage.language === "es"} />
             {!loading && (
               <div className="mx-auto max-w-2xl px-4 pb-8 text-center">
                 <button
