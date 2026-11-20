@@ -164,10 +164,19 @@ export function updateWord(
 }
 
 export function deleteWord(id: string): boolean {
-  const index = words.findIndex((w) => w.id === id);
+  // A reader save in another tab can leave this tab's cache stale.
+  // Start from the durable list and only change the cache after a successful write.
+  let current: VocabularyItem[];
+  try {
+    current = readStoredWords();
+  } catch {
+    return false;
+  }
+  const index = current.findIndex((w) => w.id === id);
   if (index === -1) return false;
-  words.splice(index, 1);
-  saveToStorage(words);
+  const next = current.filter((_, itemIndex) => itemIndex !== index);
+  if (!saveToStorage(next)) return false;
+  words = next;
   return true;
 }
 
