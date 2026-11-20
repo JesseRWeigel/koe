@@ -2,7 +2,7 @@
 
 An open-source, AI-powered language learning app that takes you from beginner to fluency. Built for serious learners who are tired of juggling 5 different apps.
 
-**Currently supports**: Japanese, Spanish, Brazilian Portuguese
+**Currently supports**: Japanese, Spanish, Brazilian Portuguese, French
 
 ## Why Koe?
 
@@ -32,7 +32,7 @@ Most language apps are great at getting you started (A1-A2) but abandon you at t
 - [x] FSRS-powered vocabulary flashcards with context sentences and audio
 - [x] AI conversation partner (cloud + local model support)
 - [x] Graded reading engine with inline glossing and streaming
-- [x] Multi-language support (Japanese, Spanish, Brazilian Portuguese)
+- [x] Multi-language support (Japanese, Spanish, Brazilian Portuguese, French)
 - [x] Dashboard with real-time progress tracking
 - [x] Grammar explanations on demand via AI
 - [x] Writing practice with AI correction
@@ -45,12 +45,13 @@ Most language apps are great at getting you started (A1-A2) but abandon you at t
 - [x] Shadowing mode (listen → record → compare)
 - [x] Kanji radical learning system (20 N5 kanji)
 - [x] Spanish-Portuguese cognate system with false friend warnings
+- [x] French language support
 
 - [x] Pitch accent training with visual diagrams (Japanese)
 
 ### Community Contributions Welcome
 
-- [ ] French language support ([see guide](docs/adding-a-language.md))
+- [ ] Additional language support ([see guide](docs/adding-a-language.md))
 
 ## Getting Started
 
