@@ -18,7 +18,9 @@ export function createPost(dependencies: GuardDependencies = {}) {
       const result = streamText({
         model: getModel("content"),
         system: buildReaderSystemPrompt(language, level),
-        prompt: `Generate a short reading passage (100-150 words) about: ${topic}. Keep it concise.`,
+        prompt: language === "ja"
+          ? `Generate a short reading passage about: ${topic}.`
+          : `Generate a short reading passage (100-150 words) about: ${topic}. Keep it concise.`,
         maxOutputTokens: 1024,
         maxRetries: 0,
         abortSignal: access.signal,

@@ -97,6 +97,36 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
+describe("reading passage prompt contract", () => {
+  it.each(["N5", "N1"])("uses one character-based target for Japanese %s", async (level) => {
+    const response = await createContentPost({ config: { mode: "local" } })(
+      request("content", { topic: "A train trip", language: "ja", level }),
+    );
+    expect(response.status).toBe(200);
+    expect(await response.text()).toBe("ok");
+    expect(streamText).toHaveBeenCalledTimes(1);
+    const options = vi.mocked(streamText).mock.calls[0][0];
+    expect(options.system).toContain("120–240 Japanese characters");
+    expect(options.system).toContain("excluding the title and parenthesized readings");
+    expect(options.system).toContain("食(た)べる");
+    expect(options.prompt).toContain("A train trip");
+    expect(options.prompt).not.toMatch(/\bwords?\b/);
+    expect(options.system).not.toMatch(/200-400 words/);
+  });
+
+  it("preserves the existing instructions for non-Japanese passages", async () => {
+    const response = await createContentPost({ config: { mode: "local" } })(
+      request("content", validBodies.content),
+    );
+    expect(response.status).toBe(200);
+    expect(await response.text()).toBe("ok");
+    const options = vi.mocked(streamText).mock.calls[0][0];
+    expect(options.system).toContain("200-400 words");
+    expect(options.prompt).toBe("Generate a short reading passage (100-150 words) about: travel. Keep it concise.");
+    expect(options.system).not.toContain("Japanese characters");
+  });
+});
+
 describe.each(routes)("$name route protection", ({ name, create, body, tokens, call }) => {
   it("rejects unauthenticated hosted requests before provider lookup", async () => {
     const acquire = vi.fn();
