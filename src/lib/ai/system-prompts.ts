@@ -176,6 +176,11 @@ export function buildReaderSystemPrompt(
   const languageName = getLanguageCodeName(language);
   const levelDesc = READER_LEVEL_DESCRIPTIONS[level] || level;
 
+  const passageLength =
+    language === "ja"
+      ? "Aim for 120–240 Japanese characters in the passage body, excluding the title and parenthesized readings. Use normal Japanese spacing; do not add spaces to separate words."
+      : "Aim for 200-400 words";
+
   const furiganaInstruction =
     language === "ja"
       ? `\n- IMPORTANT: Include furigana in parentheses after every kanji word, e.g., 食(た)べる, 学校(がっこう). This is essential for learners.`
@@ -191,7 +196,7 @@ Guidelines:
 - Choose topics that are culturally interesting and relevant
 - Write in the target language (${languageName}) only — no English translations in the passage
 - Start with a short title on its own line, followed by a blank line, then the passage
-- Aim for 200-400 words${furiganaInstruction}
+- ${passageLength}${furiganaInstruction}
 - Use varied sentence structures appropriate for the level
 - Create content that tells a story, describes a scene, or explores a topic — make it compelling
 - Paragraphs should flow naturally with logical progression`;
