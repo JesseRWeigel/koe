@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { cleanup, render, screen, fireEvent } from "@testing-library/react";
 import PitchPage from "./page";
 
 // Mock SpeechSynthesisUtterance since jsdom doesn't provide it
@@ -41,7 +41,7 @@ vi.mock("@/components/ui/sidebar", () => ({
   ),
 }));
 
-describe("Pitch Page Audio", () => {
+describe("Pitch Page", () => {
   let mockSynthesis: ReturnType<typeof createMockSpeechSynthesis>;
 
   beforeEach(() => {
@@ -55,6 +55,7 @@ describe("Pitch Page Audio", () => {
   });
 
   afterEach(() => {
+    cleanup();
     vi.useRealTimers();
     vi.restoreAllMocks();
   });
@@ -105,5 +106,23 @@ describe("Pitch Page Audio", () => {
     // The spoken text should be a hiragana reading, not kanji
     // Hiragana range: \u3040-\u309F, plus small kana combinations
     expect(utterance.text).toMatch(/^[\u3040-\u309F]+$/);
+  });
+
+  it("draws 頭 (あたま) as low-high-high and groups it under Odaka", () => {
+    render(<PitchPage />);
+
+    const diagram = screen.getByLabelText("Pitch diagram: あたま");
+    const heights = Array.from(diagram.querySelectorAll("circle"), (dot) =>
+      Number(dot.getAttribute("cy")),
+    );
+    expect(heights).toHaveLength(3);
+    expect(heights[0]).toBeGreaterThan(heights[1]);
+    expect(heights[1]).toBe(heights[2]);
+
+    fireEvent.click(screen.getByRole("button", { name: "Nakadaka" }));
+    expect(screen.queryByLabelText("Pitch diagram: あたま")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Odaka" }));
+    expect(screen.getByLabelText("Pitch diagram: あたま")).toBeInTheDocument();
   });
 });
