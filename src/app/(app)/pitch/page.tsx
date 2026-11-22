@@ -56,6 +56,8 @@ export default function PitchPage() {
           <p className="text-sm text-muted-foreground">
             Japanese pitch accent determines the melody of words. Each word follows one of four patterns
             based on where the pitch rises and falls across its morae (sound units).
+            Each noun diagram uses a hollow dot for the example particle が: its pitch stays high
+            after a flat word, but drops after a tail-high word.
           </p>
           <div className="grid gap-2 sm:grid-cols-2">
             {(Object.entries(PATTERN_DESCRIPTIONS) as [PitchPattern, string][]).map(
@@ -118,6 +120,7 @@ export default function PitchPage() {
                 <PitchDiagram
                   morae={entry.morae}
                   accentPosition={entry.accentPosition}
+                  showExampleParticle
                 />
               </CardContent>
             </Card>
