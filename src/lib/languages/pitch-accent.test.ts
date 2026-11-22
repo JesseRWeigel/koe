@@ -3,7 +3,6 @@ import {
   getPitchEntries,
   getPitchByPattern,
   getPitchForWord,
-  type PitchEntry,
   type PitchPattern,
 } from "./pitch-accent";
 
@@ -55,6 +54,19 @@ describe("pitch-accent", () => {
       );
       for (const entry of entries) {
         expect(entry.accentPosition).toBe(1);
+      }
+    });
+
+    it("nakadaka entries drop after an interior mora", () => {
+      for (const entry of getPitchByPattern("nakadaka")) {
+        expect(entry.accentPosition, entry.word).toBeGreaterThan(1);
+        expect(entry.accentPosition, entry.word).toBeLessThan(entry.morae.length);
+      }
+    });
+
+    it("odaka entries drop after the final mora", () => {
+      for (const entry of getPitchByPattern("odaka")) {
+        expect(entry.accentPosition, entry.word).toBe(entry.morae.length);
       }
     });
   });
@@ -113,6 +125,18 @@ describe("pitch-accent", () => {
       const entry = getPitchForWord("さくら");
       expect(entry).toBeDefined();
       expect(entry!.word).toBe("桜");
+    });
+
+    it("teaches the standard Tokyo tail-high pattern for 頭 (あたま)", () => {
+      const entry = getPitchForWord("頭");
+      expect(entry).toMatchObject({
+        reading: "あたま",
+        pattern: "odaka",
+        accentPosition: 3,
+        morae: ["あ", "た", "ま"],
+      });
+      expect(getPitchByPattern("odaka")).toContain(entry);
+      expect(getPitchByPattern("nakadaka")).not.toContain(entry);
     });
 
     it("returns undefined for unknown words", () => {

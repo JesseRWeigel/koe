@@ -49,11 +49,12 @@ const pitchData: Omit<PitchEntry, "morae">[] = [
   // Nakadaka (middle-high) - accentPosition N (2+): LH...HL
   { word: "男", reading: "おとこ", meaning: "man", pattern: "nakadaka", accentPosition: 2 },
   { word: "卵", reading: "たまご", meaning: "egg", pattern: "nakadaka", accentPosition: 2 },
-  { word: "頭", reading: "あたま", meaning: "head", pattern: "nakadaka", accentPosition: 1 },
   { word: "切手", reading: "きって", meaning: "postage stamp", pattern: "nakadaka", accentPosition: 2 },
   { word: "お姉さん", reading: "おねえさん", meaning: "older sister", pattern: "nakadaka", accentPosition: 3 },
 
   // Odaka (tail-high) - accentPosition = last mora: LH...H(L on particle)
+  // Standard Tokyo pattern (type 3): https://mmsrv.ninjal.ac.jp/shutoken_atlas/results/5-2_1302_10.pdf (Fig. 8)
+  { word: "頭", reading: "あたま", meaning: "head", pattern: "odaka", accentPosition: 3 },
   { word: "鼻", reading: "はな", meaning: "nose", pattern: "odaka", accentPosition: 2 },
   { word: "妹", reading: "いもうと", meaning: "younger sister", pattern: "odaka", accentPosition: 4 },
   { word: "弟", reading: "おとうと", meaning: "younger brother", pattern: "odaka", accentPosition: 4 },
