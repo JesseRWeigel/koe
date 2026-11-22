@@ -108,21 +108,23 @@ describe("Pitch Page", () => {
     expect(utterance.text).toMatch(/^[\u3040-\u309F]+$/);
   });
 
-  it("draws 頭 (あたま) as low-high-high and groups it under Odaka", () => {
+  it("shows the fall after 頭 (あたま) and groups it under Odaka", () => {
     render(<PitchPage />);
 
-    const diagram = screen.getByLabelText("Pitch diagram: あたま");
+    const name = "Pitch diagram: あたま. Following particle が: low.";
+    const diagram = screen.getByRole("img", { name });
     const heights = Array.from(diagram.querySelectorAll("circle"), (dot) =>
       Number(dot.getAttribute("cy")),
     );
-    expect(heights).toHaveLength(3);
+    expect(heights).toHaveLength(4);
     expect(heights[0]).toBeGreaterThan(heights[1]);
     expect(heights[1]).toBe(heights[2]);
+    expect(heights[3]).toBe(heights[0]);
 
     fireEvent.click(screen.getByRole("button", { name: "Nakadaka" }));
-    expect(screen.queryByLabelText("Pitch diagram: あたま")).not.toBeInTheDocument();
+    expect(screen.queryByRole("img", { name })).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Odaka" }));
-    expect(screen.getByLabelText("Pitch diagram: あたま")).toBeInTheDocument();
+    expect(screen.getByRole("img", { name })).toBeInTheDocument();
   });
 });

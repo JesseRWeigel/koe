@@ -1,6 +1,7 @@
 interface PitchDiagramProps {
   morae: string[];
   accentPosition: number; // 0 = flat (heiban), N = drop after position N
+  showExampleParticle?: boolean; // For noun examples, show the pitch of a following が
 }
 
 /**
@@ -39,9 +40,20 @@ const LOW_Y = 45;
 const SVG_HEIGHT = 70;
 const PADDING_X = 15;
 
-export function PitchDiagram({ morae, accentPosition }: PitchDiagramProps) {
-  const heights = getPitchHeights(morae, accentPosition);
-  const svgWidth = morae.length * MORA_WIDTH + PADDING_X * 2;
+export function PitchDiagram({
+  morae,
+  accentPosition,
+  showExampleParticle = false,
+}: PitchDiagramProps) {
+  // In a connected noun + が example, only the unaccented word keeps が high.
+  // A final fall is invisible if the diagram stops at the word itself.
+  const hasParticle = showExampleParticle && morae.length > 0;
+  const chartMorae = hasParticle ? [...morae, "が"] : morae;
+  const heights = getPitchHeights(chartMorae, accentPosition);
+  const svgWidth = chartMorae.length * MORA_WIDTH + PADDING_X * 2;
+  const particleLabel = hasParticle
+    ? `. Following particle が: ${heights[morae.length] ? "high" : "low"}.`
+    : "";
 
   const points = heights.map((high, i) => ({
     x: PADDING_X + i * MORA_WIDTH + MORA_WIDTH / 2,
@@ -54,8 +66,9 @@ export function PitchDiagram({ morae, accentPosition }: PitchDiagramProps) {
         width={svgWidth}
         height={SVG_HEIGHT}
         viewBox={`0 0 ${svgWidth} ${SVG_HEIGHT}`}
-        className="overflow-visible"
-        aria-label={`Pitch diagram: ${morae.join("")}`}
+        className="h-auto max-w-full overflow-visible"
+        role="img"
+        aria-label={`Pitch diagram: ${morae.join("")}${particleLabel}`}
       >
         {/* Connecting lines */}
         {points.map((point, i) => {
@@ -70,6 +83,7 @@ export function PitchDiagram({ morae, accentPosition }: PitchDiagramProps) {
               y2={point.y}
               stroke="currentColor"
               strokeWidth={2}
+              strokeDasharray={i === morae.length ? "4 3" : undefined}
               className="text-primary"
             />
           );
@@ -82,19 +96,21 @@ export function PitchDiagram({ morae, accentPosition }: PitchDiagramProps) {
             cx={point.x}
             cy={point.y}
             r={DOT_RADIUS}
-            fill="currentColor"
+            fill={i === morae.length ? "none" : "currentColor"}
+            stroke={i === morae.length ? "currentColor" : undefined}
+            strokeWidth={i === morae.length ? 2 : undefined}
             className="text-primary"
           />
         ))}
 
         {/* Mora labels */}
-        {morae.map((mora, i) => (
+        {chartMorae.map((mora, i) => (
           <text
             key={`label-${i}`}
             x={points[i].x}
             y={SVG_HEIGHT - 2}
             textAnchor="middle"
-            className="fill-foreground text-sm"
+            className={i === morae.length ? "fill-muted-foreground text-sm" : "fill-foreground text-sm"}
             fontSize={14}
           >
             {mora}
