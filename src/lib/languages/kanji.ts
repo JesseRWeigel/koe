@@ -1112,21 +1112,22 @@ export function getKanji(character: string): KanjiEntry | undefined {
   return kanjiData.find((k) => k.character === character);
 }
 
+function foldKana(text: string): string {
+  return text.normalize('NFKC').replace(/[ァ-ヶ]/g, (kana) =>
+    String.fromCharCode(kana.charCodeAt(0) - 0x60),
+  );
+}
+
 export function searchKanji(query: string): KanjiEntry[] {
-  const lowerQuery = query.toLowerCase();
-  return kanjiData.filter((k) => {
-    // Search by meaning
-    if (k.meanings.some((m) => m.toLowerCase().includes(lowerQuery))) {
-      return true;
-    }
-    // Search by on reading
-    if (k.readings.on.some((r) => r.includes(query))) {
-      return true;
-    }
-    // Search by kun reading
-    if (k.readings.kun.some((r) => r.includes(query))) {
-      return true;
-    }
-    return false;
-  });
+  const trimmed = query.trim();
+  if (!trimmed) return [];
+  const meaningQuery = trimmed.toLowerCase();
+  const readingQuery = foldKana(trimmed);
+
+  return kanjiData.filter((k) =>
+    k.character === trimmed ||
+    k.meanings.some((meaning) => meaning.toLowerCase().includes(meaningQuery)) ||
+    k.readings.on.some((reading) => foldKana(reading).includes(readingQuery)) ||
+    k.readings.kun.some((reading) => foldKana(reading).includes(readingQuery)),
+  );
 }

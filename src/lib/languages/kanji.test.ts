@@ -5,8 +5,6 @@ import {
   getKanjiByRadical,
   getKanji,
   searchKanji,
-  type Radical,
-  type KanjiEntry,
 } from './kanji';
 
 describe('kanji data', () => {
@@ -85,6 +83,24 @@ describe('kanji data', () => {
   });
 
   describe('searchKanji', () => {
+    it.each(['日', '　日　'])('finds an exact pasted character: %s', (query) => {
+      expect(searchKanji(query).map((entry) => entry.character)).toEqual(['日']);
+    });
+
+    it.each(['にち', 'ニチ', 'ﾆﾁ'])('finds the on reading in any kana form: %s', (query) => {
+      expect(searchKanji(query).map((entry) => entry.character)).toContain('日');
+    });
+
+    it('accepts katakana for a kun reading and normalizes decomposed voicing', () => {
+      expect(searchKanji('ヤマ').map((entry) => entry.character)).toContain('山');
+      expect(searchKanji('か\u3099く').map((entry) => entry.character)).toContain('学');
+    });
+
+    it('ignores surrounding whitespace but does not match a whitespace-only query', () => {
+      expect(searchKanji('  fire  ').map((entry) => entry.character)).toContain('火');
+      expect(searchKanji('　 ')).toEqual([]);
+    });
+
     it('finds kanji by English meaning', () => {
       const results = searchKanji('fire');
       expect(results.length).toBeGreaterThan(0);
