@@ -38,6 +38,8 @@ const pitchData: Omit<PitchEntry, "morae">[] = [
   { word: "先生", reading: "せんせい", meaning: "teacher", pattern: "heiban", accentPosition: 0 },
   { word: "兄弟", reading: "きょうだい", meaning: "siblings", pattern: "heiban", accentPosition: 0 },
   { word: "言葉", reading: "ことば", meaning: "word/language", pattern: "heiban", accentPosition: 0 },
+  // はな (nose) has no fall, unlike はな (flower): https://yg.jpf.go.jp/wp-content/uploads/2021/06/wordlist_X.pdf#page=73
+  { word: "鼻", reading: "はな", meaning: "nose", pattern: "heiban", accentPosition: 0 },
 
   // Atamadaka (head-high) - accentPosition 1: HL...L
   { word: "命", reading: "いのち", meaning: "life", pattern: "atamadaka", accentPosition: 1 },
@@ -55,7 +57,6 @@ const pitchData: Omit<PitchEntry, "morae">[] = [
   // Odaka (tail-high) - accentPosition = last mora: LH...H(L on particle)
   // Standard Tokyo pattern (type 3): https://mmsrv.ninjal.ac.jp/shutoken_atlas/results/5-2_1302_10.pdf (Fig. 8)
   { word: "頭", reading: "あたま", meaning: "head", pattern: "odaka", accentPosition: 3 },
-  { word: "鼻", reading: "はな", meaning: "nose", pattern: "odaka", accentPosition: 2 },
   { word: "妹", reading: "いもうと", meaning: "younger sister", pattern: "odaka", accentPosition: 4 },
   { word: "弟", reading: "おとうと", meaning: "younger brother", pattern: "odaka", accentPosition: 4 },
   { word: "山", reading: "やま", meaning: "mountain", pattern: "odaka", accentPosition: 2 },

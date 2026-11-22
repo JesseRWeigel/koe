@@ -127,4 +127,24 @@ describe("Pitch Page", () => {
     fireEvent.click(screen.getByRole("button", { name: "Odaka" }));
     expect(screen.getByRole("img", { name })).toBeInTheDocument();
   });
+
+  it("keeps the particle pitch high after 鼻 (はな) and lists it under Heiban", () => {
+    render(<PitchPage />);
+
+    const name = "Pitch diagram: はな. Following particle が: high.";
+    const diagram = screen.getByRole("img", { name });
+    const heights = Array.from(diagram.querySelectorAll("circle"), (dot) =>
+      Number(dot.getAttribute("cy")),
+    );
+    expect(heights).toHaveLength(3);
+    expect(heights[0]).toBeGreaterThan(heights[1]);
+    expect(heights[2]).toBe(heights[1]);
+
+    fireEvent.click(screen.getByRole("button", { name: "Odaka" }));
+    expect(screen.queryByText("鼻")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Heiban" }));
+    expect(screen.getByText("鼻")).toBeInTheDocument();
+    expect(screen.getByRole("img", { name })).toBeInTheDocument();
+  });
 });

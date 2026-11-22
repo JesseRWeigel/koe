@@ -139,6 +139,20 @@ describe("pitch-accent", () => {
       expect(getPitchByPattern("nakadaka")).not.toContain(entry);
     });
 
+    it("teaches 鼻 (nose, はな) as flat, not the final-fall pattern of 花 (flower)", () => {
+      const nose = getPitchForWord("鼻");
+      expect(nose).toMatchObject({
+        reading: "はな",
+        meaning: "nose",
+        pattern: "heiban",
+        accentPosition: 0,
+        morae: ["は", "な"],
+      });
+      expect(getPitchForWord("はな")).toBe(nose);
+      expect(getPitchByPattern("heiban")).toContain(nose);
+      expect(getPitchByPattern("odaka")).not.toContain(nose);
+    });
+
     it("returns undefined for unknown words", () => {
       const entry = getPitchForWord("zzzzz");
       expect(entry).toBeUndefined();
