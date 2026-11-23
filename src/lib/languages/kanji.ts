@@ -1128,6 +1128,9 @@ export function searchKanji(query: string): KanjiEntry[] {
     k.character === trimmed ||
     k.meanings.some((meaning) => meaning.toLowerCase().includes(meaningQuery)) ||
     k.readings.on.some((reading) => foldKana(reading).includes(readingQuery)) ||
-    k.readings.kun.some((reading) => foldKana(reading).includes(readingQuery)),
+    k.readings.kun.some((reading) => foldKana(reading).includes(readingQuery)) ||
+    k.exampleWords.some((example) =>
+      example.word === trimmed || foldKana(example.reading) === readingQuery,
+    ),
   );
 }

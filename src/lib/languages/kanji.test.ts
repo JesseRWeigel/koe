@@ -96,6 +96,17 @@ describe('kanji data', () => {
       expect(searchKanji('か\u3099く').map((entry) => entry.character)).toContain('学');
     });
 
+    it.each(['電車', 'でんしゃ', 'デンシャ', 'ﾃﾞﾝｼｬ', '　て\u3099んしゃ　'])(
+      'finds a kanji using an example word or its reading: %s',
+      (query) => {
+        expect(searchKanji(query).map((entry) => entry.character)).toContain('電');
+      },
+    );
+
+    it('returns all kanji that share an example word without duplicate cards', () => {
+      expect(searchKanji('電車').map((entry) => entry.character)).toEqual(['車', '電']);
+    });
+
     it('ignores surrounding whitespace but does not match a whitespace-only query', () => {
       expect(searchKanji('  fire  ').map((entry) => entry.character)).toContain('火');
       expect(searchKanji('　 ')).toEqual([]);

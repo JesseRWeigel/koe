@@ -38,7 +38,7 @@ export function KanjiBrowser() {
       <div className="relative">
         <SearchIcon className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
         <Input
-          placeholder="Search by meaning or reading..."
+          placeholder="Search kanji, meanings, readings, or example words..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           className="pl-8"
