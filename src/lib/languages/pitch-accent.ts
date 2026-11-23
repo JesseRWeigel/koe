@@ -49,7 +49,6 @@ const pitchData: Omit<PitchEntry, "morae">[] = [
   { word: "秋", reading: "あき", meaning: "autumn", pattern: "atamadaka", accentPosition: 1 },
 
   // Nakadaka (middle-high) - accentPosition N (2+): LH...HL
-  { word: "男", reading: "おとこ", meaning: "man", pattern: "nakadaka", accentPosition: 2 },
   { word: "卵", reading: "たまご", meaning: "egg", pattern: "nakadaka", accentPosition: 2 },
   { word: "切手", reading: "きって", meaning: "postage stamp", pattern: "nakadaka", accentPosition: 2 },
   { word: "お姉さん", reading: "おねえさん", meaning: "older sister", pattern: "nakadaka", accentPosition: 3 },
@@ -57,6 +56,8 @@ const pitchData: Omit<PitchEntry, "morae">[] = [
   // Odaka (tail-high) - accentPosition = last mora: LH...H(L on particle)
   // Standard Tokyo pattern (type 3): https://mmsrv.ninjal.ac.jp/shutoken_atlas/results/5-2_1302_10.pdf (Fig. 8)
   { word: "頭", reading: "あたま", meaning: "head", pattern: "odaka", accentPosition: 3 },
+  // Standard Tokyo おとこ↓: https://yg.jpf.go.jp/wp-content/uploads/2021/06/wordlist_X.pdf#page=43
+  { word: "男", reading: "おとこ", meaning: "man", pattern: "odaka", accentPosition: 3 },
   { word: "妹", reading: "いもうと", meaning: "younger sister", pattern: "odaka", accentPosition: 4 },
   { word: "弟", reading: "おとうと", meaning: "younger brother", pattern: "odaka", accentPosition: 4 },
   { word: "山", reading: "やま", meaning: "mountain", pattern: "odaka", accentPosition: 2 },
