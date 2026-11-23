@@ -108,10 +108,10 @@ describe("Pitch Page", () => {
     expect(utterance.text).toMatch(/^[\u3040-\u309F]+$/);
   });
 
-  it("shows the fall after 頭 (あたま) and groups it under Odaka", () => {
+  it.each(["あたま", "おとこ"])("shows the fall after %s and groups it under Odaka", (reading) => {
     render(<PitchPage />);
 
-    const name = "Pitch diagram: あたま. Following particle が: low.";
+    const name = `Pitch diagram: ${reading}. Following particle が: low.`;
     const diagram = screen.getByRole("img", { name });
     const heights = Array.from(diagram.querySelectorAll("circle"), (dot) =>
       Number(dot.getAttribute("cy")),

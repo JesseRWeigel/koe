@@ -153,6 +153,19 @@ describe("pitch-accent", () => {
       expect(getPitchByPattern("odaka")).not.toContain(nose);
     });
 
+    it("teaches 男 (おとこ) with a fall after the final mora in Standard Tokyo Japanese", () => {
+      const man = getPitchForWord("男");
+      expect(man).toMatchObject({
+        reading: "おとこ",
+        pattern: "odaka",
+        accentPosition: 3,
+        morae: ["お", "と", "こ"],
+      });
+      expect(getPitchForWord("おとこ")).toBe(man);
+      expect(getPitchByPattern("odaka")).toContain(man);
+      expect(getPitchByPattern("nakadaka")).not.toContain(man);
+    });
+
     it("returns undefined for unknown words", () => {
       const entry = getPitchForWord("zzzzz");
       expect(entry).toBeUndefined();
