@@ -59,22 +59,36 @@ export function ensureVoicesReady(): Promise<void> {
   });
 }
 
+let pendingPlayback: { timer: ReturnType<typeof setTimeout>; resolve: () => void } | undefined;
+
+function cancelPendingPlayback(): void {
+  const pending = pendingPlayback;
+  if (!pending) return;
+  pendingPlayback = undefined;
+  clearTimeout(pending.timer);
+  // This request never reached the browser, so it will not emit an event.
+  pending.resolve();
+}
+
 /**
  * Speak the given text using the browser SpeechSynthesis API.
  * Returns a Promise that resolves when the utterance finishes, or rejects on
- * error. The small delay between cancel() and speak() works around a browser
+ * error. Requests canceled before they reach the browser resolve quietly.
+ * The small delay between cancel() and speak() works around a browser
  * bug where the new utterance is silently dropped.
  */
 export function speak(text: string, options: TTSOptions): Promise<void> {
   if (!isSupported()) return Promise.resolve();
 
-  // Cancel any current speech first
+  // The browser cannot cancel an utterance we have not handed it yet.
+  cancelPendingPlayback();
   window.speechSynthesis.cancel();
 
   return new Promise<void>((resolve, reject) => {
     // Small delay after cancel — some browsers (Chrome, Edge) swallow the new
     // utterance when speak() is called in the same micro-task as cancel().
-    setTimeout(() => {
+    const timer = setTimeout(() => {
+      pendingPlayback = undefined;
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = LANG_MAP[options.lang];
       utterance.rate = Math.min(2.0, Math.max(0.5, options.rate ?? 1.0));
@@ -90,11 +104,13 @@ export function speak(text: string, options: TTSOptions): Promise<void> {
 
       window.speechSynthesis.speak(utterance);
     }, 50);
+    pendingPlayback = { timer, resolve };
   });
 }
 
-/** Stop any current speech */
+/** Stop current or scheduled speech */
 export function stop(): void {
+  cancelPendingPlayback();
   if (!isSupported()) return;
   window.speechSynthesis.cancel();
 }
