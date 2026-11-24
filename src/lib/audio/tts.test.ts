@@ -341,6 +341,43 @@ describe("TTS Service", () => {
     });
   });
 
+  describe("scheduled playback", () => {
+    it("plays only the latest Japanese request during the browser delay", async () => {
+      mockSynthesis.speak.mockImplementation((utterance: MockSpeechSynthesisUtterance) => {
+        utterance.onend?.();
+      });
+
+      const first = speak("はな", { lang: "ja" });
+      vi.advanceTimersByTime(25);
+      const latest = speak("あたま", { lang: "ja" });
+
+      vi.advanceTimersByTime(25);
+      expect(mockSynthesis.speak).not.toHaveBeenCalled();
+      vi.advanceTimersByTime(25);
+      expect(mockSynthesis.speak).toHaveBeenCalledOnce();
+      expect(mockSynthesis.speak.mock.calls[0][0].text).toBe("あたま");
+      await Promise.all([first, latest]);
+    });
+
+    it("stops a scheduled Japanese request and allows a later request", async () => {
+      mockSynthesis.speak.mockImplementation((utterance: MockSpeechSynthesisUtterance) => {
+        utterance.onend?.();
+      });
+
+      const canceled = speak("おとこ", { lang: "ja" });
+      stop();
+      vi.advanceTimersByTime(50);
+      expect(mockSynthesis.speak).not.toHaveBeenCalled();
+      await canceled;
+
+      const next = speak("はな", { lang: "ja" });
+      vi.advanceTimersByTime(50);
+      await next;
+      expect(mockSynthesis.speak).toHaveBeenCalledOnce();
+      expect(mockSynthesis.speak.mock.calls[0][0].text).toBe("はな");
+    });
+  });
+
   describe("stop", () => {
     it("calls speechSynthesis.cancel", () => {
       stop();
