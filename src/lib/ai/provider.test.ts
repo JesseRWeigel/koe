@@ -1,8 +1,16 @@
+import assert from "node:assert/strict";
+import type { LanguageModel } from "ai";
 import { describe, it, expect, vi, afterEach } from "vitest";
 
 // Mock global fetch for isOllamaAvailable
 const mockFetch = vi.fn();
 vi.stubGlobal("fetch", mockFetch);
+
+// These tests inspect the concrete adapter, not an SDK model ID shortcut.
+function requireModelObject(model: LanguageModel) {
+  assert(typeof model !== "string", "Expected a concrete AI SDK model");
+  return model;
+}
 
 const gatewayResponse = () =>
   new Response(
@@ -65,7 +73,7 @@ describe("AI Provider Abstraction", () => {
     it("uses ollama provider when DEFAULT_AI_PROVIDER=ollama", async () => {
       vi.stubEnv("DEFAULT_AI_PROVIDER", "ollama");
       const { getModel } = await import("./provider");
-      const model = getModel("chat");
+      const model = requireModelObject(getModel("chat"));
       // ai-sdk-ollama returns models with provider containing "ollama"
       expect(model.provider).toContain("ollama");
     });
@@ -73,7 +81,7 @@ describe("AI Provider Abstraction", () => {
     it("uses default model names for ollama", async () => {
       vi.stubEnv("DEFAULT_AI_PROVIDER", "ollama");
       const { getModel } = await import("./provider");
-      const model = getModel("chat");
+      const model = requireModelObject(getModel("chat"));
       expect(model.modelId).toBe("qwen3.5:9b");
     });
 
@@ -81,16 +89,16 @@ describe("AI Provider Abstraction", () => {
       vi.stubEnv("DEFAULT_AI_PROVIDER", "ollama");
       vi.stubEnv("OLLAMA_CHAT_MODEL", "custom-chat-model");
       const { getModel } = await import("./provider");
-      const model = getModel("chat");
+      const model = requireModelObject(getModel("chat"));
       expect(model.modelId).toBe("custom-chat-model");
     });
 
-    it("uses gateway model string when DEFAULT_AI_PROVIDER=gateway", async () => {
+    it("returns a gateway model object when DEFAULT_AI_PROVIDER=gateway", async () => {
       vi.stubEnv("DEFAULT_AI_PROVIDER", "gateway");
       vi.stubEnv("AI_GATEWAY_API_KEY", "synthetic-gateway-key");
       const { getModel } = await import("./provider");
-      const model = getModel("chat");
-      expect(model).toBeDefined();
+      const model = requireModelObject(getModel("chat"));
+      expect(model.provider).toContain("gateway");
     });
 
     it("uses custom model names from env for gateway", async () => {
@@ -98,7 +106,7 @@ describe("AI Provider Abstraction", () => {
       vi.stubEnv("AI_GATEWAY_API_KEY", "synthetic-gateway-key");
       vi.stubEnv("GATEWAY_CHAT_MODEL", "custom/gateway-model");
       const { getModel } = await import("./provider");
-      const model = getModel("chat");
+      const model = requireModelObject(getModel("chat"));
       expect(model.modelId).toBe("custom/gateway-model");
     });
 
@@ -119,7 +127,7 @@ describe("AI Provider Abstraction", () => {
         mockFetch.mockResolvedValueOnce(gatewayResponse());
 
         const { getModel } = await import("./provider");
-        const model = getModel(purpose);
+        const model = requireModelObject(getModel(purpose));
         await model.doGenerate({ prompt });
 
         const [url, init] = mockFetch.mock.calls.at(-1)!;
@@ -140,7 +148,7 @@ describe("AI Provider Abstraction", () => {
       vi.stubEnv("AI_GATEWAY_API_KEY", "");
       vi.stubEnv("VERCEL_OIDC_TOKEN", "");
       const { getModel } = await import("./provider");
-      const model = getModel("chat");
+      const model = requireModelObject(getModel("chat"));
 
       await expect(model.doGenerate({ prompt })).rejects.toThrow(
         "No authentication provided"
@@ -206,7 +214,7 @@ describe("AI Provider Abstraction", () => {
       mockFetch.mockResolvedValueOnce(gatewayResponse());
 
       const { getModel } = await import("./provider");
-      const model = getModel("chat");
+      const model = requireModelObject(getModel("chat"));
       await model.doGenerate({ prompt });
 
       const [url, init] = mockFetch.mock.calls.at(-1)!;
@@ -240,7 +248,7 @@ describe("AI Provider Abstraction", () => {
       );
 
       const { getModel } = await import("./provider");
-      const model = getModel("chat");
+      const model = requireModelObject(getModel("chat"));
       await model.doGenerate({ prompt });
 
       const [url, init] = mockFetch.mock.calls.at(-1)!;
