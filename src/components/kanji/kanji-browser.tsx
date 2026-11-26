@@ -23,6 +23,7 @@ export function KanjiBrowser() {
   const [selectedKanji, setSelectedKanji] = React.useState<KanjiEntry | null>(
     null
   );
+  const [level, setLevel] = React.useState("N5");
   const [query, setQuery] = React.useState("");
   const [dialogOpen, setDialogOpen] = React.useState(false);
 
@@ -31,13 +32,14 @@ export function KanjiBrowser() {
     setDialogOpen(true);
   };
 
-  const searchResults = query.length > 0 ? searchKanji(query) : null;
+  const searchResults = query.trim().length > 0 ? searchKanji(query) : null;
 
   return (
     <div className="flex flex-col gap-4 p-4">
       <div className="relative">
         <SearchIcon className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
         <Input
+          aria-label="Search kanji"
           placeholder="Search kanji, meanings, readings, or example words..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
@@ -61,7 +63,7 @@ export function KanjiBrowser() {
           </div>
         </div>
       ) : (
-        <Tabs defaultValue="N5">
+        <Tabs value={level} onValueChange={setLevel}>
           <TabsList>
             {levels.map((level) => (
               <TabsTrigger key={level} value={level}>
