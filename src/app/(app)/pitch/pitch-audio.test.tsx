@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { cleanup, render, screen, fireEvent } from "@testing-library/react";
 import PitchPage from "./page";
+import { getPitchEntries } from "@/lib/languages/pitch-accent";
 
 // Mock SpeechSynthesisUtterance since jsdom doesn't provide it
 class MockSpeechSynthesisUtterance {
@@ -64,10 +65,12 @@ describe("Pitch Page", () => {
     render(<PitchPage />);
 
     const playButtons = screen.getAllByRole("button", { name: "Play audio" });
-    // There are 22 pitch entries total (6 heiban + 5 atamadaka + 5 nakadaka + 5 odaka = 21... let's just check > 0)
-    expect(playButtons.length).toBeGreaterThan(0);
-    // Each pitch entry should have one play button — we have 21 entries
-    expect(playButtons).toHaveLength(21);
+    expect(playButtons).toHaveLength(getPitchEntries().length);
+    for (const button of playButtons) {
+      expect(button).toHaveAccessibleDescription(
+        /browser audio reads the word by itself.*may not match the pitch/i,
+      );
+    }
   });
 
   it("calls TTS speak with Japanese language when play button is clicked", () => {
@@ -146,5 +149,22 @@ describe("Pitch Page", () => {
     fireEvent.click(screen.getByRole("button", { name: "Heiban" }));
     expect(screen.getByText("鼻")).toBeInTheDocument();
     expect(screen.getByRole("img", { name })).toBeInTheDocument();
+  });
+
+  it("contrasts the following particle for nose and flower without promising an audio contrast", () => {
+    render(<PitchPage />);
+
+    const nose = screen.getByRole("img", { name: "Pitch diagram: はな. Following particle が: high." });
+    const flower = screen.getByRole("img", { name: "Pitch diagram: はな. Following particle が: low." });
+    const heights = (diagram: HTMLElement) =>
+      Array.from(diagram.querySelectorAll("circle"), (dot) => Number(dot.getAttribute("cy")));
+    expect(heights(nose).slice(0, 2)).toEqual(heights(flower).slice(0, 2));
+    expect(heights(nose)[1]).toBe(heights(nose)[2]);
+    expect(heights(flower)[2]).toBeGreaterThan(heights(flower)[1]);
+
+    fireEvent.click(screen.getByRole("button", { name: "Odaka" }));
+    expect(screen.queryByText("鼻", { exact: true })).not.toBeInTheDocument();
+    expect(screen.getByText("花", { exact: true })).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "Pitch diagram: はな. Following particle が: low." })).toBeInTheDocument();
   });
 });

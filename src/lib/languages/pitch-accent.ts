@@ -54,6 +54,8 @@ const pitchData: Omit<PitchEntry, "morae">[] = [
   { word: "お姉さん", reading: "おねえさん", meaning: "older sister", pattern: "nakadaka", accentPosition: 3 },
 
   // Odaka (tail-high) - accentPosition = last mora: LH...H(L on particle)
+  // Standard Tokyo はな↓: https://yg.jpf.go.jp/wp-content/uploads/2021/06/wordlist_X.pdf#page=65
+  { word: "花", reading: "はな", meaning: "flower", pattern: "odaka", accentPosition: 2 },
   // Standard Tokyo pattern (type 3): https://mmsrv.ninjal.ac.jp/shutoken_atlas/results/5-2_1302_10.pdf (Fig. 8)
   { word: "頭", reading: "あたま", meaning: "head", pattern: "odaka", accentPosition: 3 },
   // Standard Tokyo おとこ↓: https://yg.jpf.go.jp/wp-content/uploads/2021/06/wordlist_X.pdf#page=43

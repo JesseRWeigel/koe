@@ -12,6 +12,7 @@ interface PlayButtonProps {
   rate?: number;
   size?: "sm" | "default";
   className?: string;
+  describedBy?: string;
 }
 
 export function PlayButton({
@@ -20,6 +21,7 @@ export function PlayButton({
   rate,
   size = "default",
   className,
+  describedBy,
 }: PlayButtonProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const supported = isSupported();
@@ -83,6 +85,7 @@ export function PlayButton({
       className={className}
       onClick={handleClick}
       aria-label={label}
+      aria-describedby={describedBy}
     >
       <Icon />
     </Button>
