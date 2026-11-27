@@ -56,8 +56,9 @@ export default function PitchPage() {
           <p className="text-sm text-muted-foreground">
             Japanese pitch accent determines the melody of words. Each word follows one of four patterns
             based on where the pitch rises and falls across its morae (sound units).
-            Each noun diagram uses a hollow dot for the example particle が: its pitch stays high
-            after a flat word, but drops after a tail-high word.
+            The hollow dot is the following particle <span lang="ja">が</span>, not part of the word.
+            Compare <span lang="ja">鼻が</span> (nose), where it stays high, with{" "}
+            <span lang="ja">花が</span> (flower), where it drops.
           </p>
           <div className="grid gap-2 sm:grid-cols-2">
             {(Object.entries(PATTERN_DESCRIPTIONS) as [PitchPattern, string][]).map(
@@ -92,6 +93,11 @@ export default function PitchPage() {
           ))}
         </div>
 
+        <p id="pitch-word-audio-note" className="text-sm text-muted-foreground">
+          Browser audio reads the word by itself, without <span lang="ja">が</span>.
+          The voice may not match the pitch shown in the diagram.
+        </p>
+
         {/* Pitch cards grid */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {entries.map((entry) => (
@@ -99,12 +105,13 @@ export default function PitchPage() {
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
                   <span className="flex items-center gap-1">
-                    <span className="text-2xl">{entry.word}</span>
+                    <span className="text-2xl" lang="ja">{entry.word}</span>
                     <PlayButton
                       text={entry.reading}
                       lang="ja"
                       rate={0.75}
                       size="sm"
+                      describedBy="pitch-word-audio-note"
                     />
                   </span>
                   <Badge variant={PATTERN_COLORS[entry.pattern]}>
@@ -114,7 +121,7 @@ export default function PitchPage() {
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="text-sm text-muted-foreground">
-                  <span className="text-lg">{entry.reading}</span>
+                  <span className="text-lg" lang="ja">{entry.reading}</span>
                   <span className="ml-2">— {entry.meaning}</span>
                 </div>
                 <PitchDiagram
