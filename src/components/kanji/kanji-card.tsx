@@ -5,7 +5,7 @@ import type { KanjiEntry } from "@/lib/languages/kanji";
 
 interface KanjiCardProps {
   kanji: KanjiEntry;
-  onClick?: (kanji: KanjiEntry) => void;
+  onClick?: (kanji: KanjiEntry, opener: HTMLButtonElement) => void;
 }
 
 export function KanjiCard({ kanji, onClick }: KanjiCardProps) {
@@ -15,7 +15,7 @@ export function KanjiCard({ kanji, onClick }: KanjiCardProps) {
   return (
     <button
       type="button"
-      onClick={() => onClick?.(kanji)}
+      onClick={(event) => onClick?.(kanji, event.currentTarget)}
       className="flex flex-col items-center gap-2 rounded-xl border bg-card p-4 text-card-foreground ring-1 ring-foreground/10 transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
       <span lang="ja" className="text-4xl font-bold">{kanji.character}</span>

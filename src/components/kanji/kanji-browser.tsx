@@ -27,7 +27,11 @@ export function KanjiBrowser() {
   const [query, setQuery] = React.useState("");
   const [dialogOpen, setDialogOpen] = React.useState(false);
 
-  const handleSelect = (kanji: KanjiEntry) => {
+  const openerRef = React.useRef<HTMLButtonElement>(null);
+  const searchRef = React.useRef<HTMLInputElement>(null);
+
+  const handleSelect = (kanji: KanjiEntry, opener: HTMLButtonElement) => {
+    openerRef.current = opener;
     setSelectedKanji(kanji);
     setDialogOpen(true);
   };
@@ -39,6 +43,7 @@ export function KanjiBrowser() {
       <div className="relative">
         <SearchIcon className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
         <Input
+          ref={searchRef}
           aria-label="Search kanji"
           placeholder="Search kanji, meanings, readings, or example words..."
           value={query}
@@ -97,7 +102,11 @@ export function KanjiBrowser() {
       )}
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent>
+        <DialogContent
+          finalFocus={() =>
+            openerRef.current?.isConnected ? openerRef.current : searchRef.current
+          }
+        >
           <DialogHeader>
             <DialogTitle>Kanji Detail</DialogTitle>
           </DialogHeader>

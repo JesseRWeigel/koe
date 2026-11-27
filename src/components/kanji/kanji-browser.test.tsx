@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, expect, it } from "vitest";
 import { KanjiBrowser } from "./kanji-browser";
 
@@ -41,4 +41,17 @@ it("marks Japanese text for speech and makes a missing reading explicit", () => 
   expect(inDetail.getByText("三百")).toHaveAttribute("lang", "ja");
   expect(inDetail.getByText("(さんびゃく)")).toHaveAttribute("lang", "ja");
   expect(inDetail.getByText(/three hundred/i)).not.toHaveAttribute("lang");
+});
+
+it("returns focus to the kanji card that opened details from search", async () => {
+  render(<KanjiBrowser />);
+  const search = screen.getByRole("textbox", { name: "Search kanji" });
+  fireEvent.change(search, { target: { value: "電車" } });
+  const card = screen.getByText("電", { exact: true }).closest("button")!;
+  // Some pointer environments do not focus a button when they activate it.
+  search.focus();
+  fireEvent.click(card);
+  const dialog = screen.getByRole("dialog");
+  fireEvent.click(within(dialog).getByRole("button", { name: "Close" }));
+  await waitFor(() => expect(card).toHaveFocus());
 });
