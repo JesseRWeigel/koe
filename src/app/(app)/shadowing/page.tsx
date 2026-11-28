@@ -103,6 +103,7 @@ export default function ShadowingPage() {
         </p>
 
         <ShadowingPlayer
+          key={`${language}:${currentIndex}`}
           sentence={current.sentence}
           reading={current.reading}
           meaning={current.meaning}
