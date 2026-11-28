@@ -6,62 +6,115 @@ export interface RecorderState {
   duration: number; // seconds
 }
 
-let state: RecorderState = {
-  status: "idle",
-  audioUrl: null,
-  duration: 0,
-};
+function idleState(): RecorderState {
+  return { status: "idle", audioUrl: null, duration: 0 };
+}
 
-let mediaRecorder: MediaRecorder | null = null;
-let chunks: Blob[] = [];
-let startTime = 0;
+interface Session {
+  recorder: MediaRecorder;
+  finished: Promise<string | null>;
+  cancel: () => void;
+}
+
+let state = idleState();
+let session: Session | null = null;
+let generation = 0;
 
 export function getRecorderState(): RecorderState {
   return { ...state };
 }
 
 export function resetRecorder(): void {
-  if (state.audioUrl) {
-    URL.revokeObjectURL(state.audioUrl);
-  }
-  state = { status: "idle", audioUrl: null, duration: 0 };
-  mediaRecorder = null;
-  chunks = [];
-  startTime = 0;
+  generation++;
+  const previous = session;
+  session = null;
+  previous?.cancel();
+  if (state.audioUrl) URL.revokeObjectURL(state.audioUrl);
+  state = idleState();
 }
 
-export async function startRecording(): Promise<void> {
+export async function startRecording(): Promise<boolean> {
   if (typeof navigator === "undefined" || !navigator.mediaDevices) {
     throw new Error("Recording not supported in this environment");
   }
 
-  const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-  mediaRecorder = new MediaRecorder(stream);
-  chunks = [];
-  startTime = Date.now();
+  resetRecorder();
+  const request = generation;
+  let stream: MediaStream;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  } catch (error) {
+    if (request !== generation) return false;
+    throw error;
+  }
+  const releaseTracks = () => stream.getTracks().forEach((track) => track.stop());
+  if (request !== generation) {
+    releaseTracks();
+    return false;
+  }
 
-  mediaRecorder.ondataavailable = (e) => {
-    if (e.data.size > 0) chunks.push(e.data);
+  let recorder: MediaRecorder;
+  try {
+    recorder = new MediaRecorder(stream);
+  } catch (error) {
+    releaseTracks();
+    throw error;
+  }
+  let chunks: Blob[] = [];
+  const startTime = Date.now();
+  let settled = false;
+  let resolve!: (url: string | null) => void;
+  const finished = new Promise<string | null>((done) => { resolve = done; });
+  const finish = (keepRecording: boolean) => {
+    if (settled) return;
+    settled = true;
+    releaseTracks();
+    let audioUrl: string | null = null;
+    if (keepRecording && request === generation && chunks.length > 0) {
+      try {
+        const blob = new Blob(chunks, { type: recorder.mimeType || chunks[0].type });
+        audioUrl = URL.createObjectURL(blob);
+      } catch {
+        // A recording without a playable URL cannot be offered for comparison.
+      }
+    }
+    chunks = [];
+    if (request === generation) {
+      session = null;
+      state = audioUrl
+        ? { status: "recorded", audioUrl, duration: Math.round((Date.now() - startTime) / 1000) }
+        : idleState();
+    }
+    resolve(audioUrl);
+  };
+  const cancel = () => {
+    finish(false);
+    if (recorder.state !== "inactive") {
+      try { recorder.stop(); } catch { /* tracks are already stopped */ }
+    }
   };
 
-  mediaRecorder.onstop = () => {
-    const blob = new Blob(chunks, { type: "audio/webm" });
-    const url = URL.createObjectURL(blob);
-    state = {
-      status: "recorded",
-      audioUrl: url,
-      duration: Math.round((Date.now() - startTime) / 1000),
-    };
-    // Stop all tracks to release the mic
-    stream.getTracks().forEach((t) => t.stop());
+  recorder.ondataavailable = (event) => {
+    if (!settled && event.data.size > 0) chunks.push(event.data);
   };
-
-  mediaRecorder.start();
+  recorder.onstop = () => finish(true);
+  recorder.onerror = cancel;
+  session = { recorder, finished, cancel };
+  try {
+    recorder.start();
+  } catch (error) {
+    cancel();
+    throw error;
+  }
   state = { ...state, status: "recording" };
+  return true;
 }
 
-export function stopRecording(): void {
-  if (mediaRecorder && mediaRecorder.state === "recording") {
-    mediaRecorder.stop();
+export function stopRecording(): Promise<string | null> {
+  if (!session) return Promise.resolve(state.audioUrl);
+  const active = session;
+  if (active.recorder.state !== "inactive") {
+    try { active.recorder.stop(); } catch { active.cancel(); }
   }
+  return active.finished;
 }

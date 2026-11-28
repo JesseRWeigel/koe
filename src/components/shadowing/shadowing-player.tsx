@@ -15,7 +15,6 @@ import { speak, stop as stopTTS, ensureVoicesReady } from "@/lib/audio/tts";
 import {
   startRecording,
   stopRecording,
-  getRecorderState,
   resetRecorder,
 } from "@/lib/audio/recorder";
 import type { LanguageCode } from "@/lib/languages";
@@ -34,11 +33,18 @@ export function ShadowingPlayer({
   language,
 }: ShadowingPlayerProps) {
   const [phase, setPhase] = useState<
-    "listen" | "recording" | "compare" | "idle"
+    "listen" | "requesting" | "recording" | "finishing" | "compare" | "idle"
   >("idle");
   const [recordingUrl, setRecordingUrl] = useState<string | null>(null);
   const [voicesReady, setVoicesReady] = useState(false);
-  const cancelledRef = useRef(false);
+  const activity = useRef(0);
+  const playback = useRef<HTMLAudioElement | null>(null);
+  const [recordingError, setRecordingError] = useState<string | null>(null);
+  const busyRecording = ["requesting", "recording", "finishing"].includes(phase);
+
+  const cancelActivity = useCallback(() => {
+    activity.current++;
+  }, []);
 
   // Pre-load voices on mount so "Listen" works on first click
   useEffect(() => {
@@ -48,15 +54,22 @@ export function ShadowingPlayer({
     });
     return () => {
       mounted = false;
+      cancelActivity();
+      resetRecorder();
+      stopTTS();
+      playback.current?.pause();
+      playback.current = null;
     };
-  }, []);
+  }, [cancelActivity]);
 
   const handleListen = useCallback(async () => {
-    cancelledRef.current = false;
+    const request = ++activity.current;
+    playback.current?.pause();
     setPhase("listen");
 
     // Ensure voices are loaded (usually instant after first load)
     await ensureVoicesReady();
+    if (request !== activity.current) return;
 
     try {
       await speak(sentence, { lang: language, rate: 0.8 });
@@ -64,35 +77,42 @@ export function ShadowingPlayer({
       // Utterance was cancelled or errored — ignore
     }
 
-    // Only transition to idle if we weren't cancelled/reset
-    if (!cancelledRef.current) {
-      setPhase("idle");
+    // Preserve the current comparison when replaying the original.
+    if (request === activity.current) {
+      setPhase(recordingUrl ? "compare" : "idle");
     }
-  }, [sentence, language]);
+  }, [sentence, language, recordingUrl]);
 
   const handleRecord = useCallback(async () => {
+    const request = ++activity.current;
+    playback.current?.pause();
+    playback.current = null;
+    stopTTS();
+    setRecordingUrl(null);
+    setRecordingError(null);
+    setPhase("requesting");
     try {
-      resetRecorder();
-      await startRecording();
-      setPhase("recording");
+      const started = await startRecording();
+      if (started && request === activity.current) setPhase("recording");
     } catch {
-      alert(
-        "Microphone access denied. Please allow microphone access to use shadowing."
-      );
+      if (request !== activity.current) return;
+      setRecordingError("Could not start recording. Check microphone access and try again.");
+      setPhase("idle");
     }
   }, []);
 
-  const handleStopRecording = useCallback(() => {
-    stopRecording();
-    // Small delay to let onstop fire
-    setTimeout(() => {
-      const state = getRecorderState();
-      setRecordingUrl(state.audioUrl);
-      setPhase("compare");
-    }, 200);
+  const handleStopRecording = useCallback(async () => {
+    const request = activity.current;
+    setPhase("finishing");
+    const url = await stopRecording();
+    if (request !== activity.current) return;
+    setRecordingUrl(url);
+    if (!url) setRecordingError("No audio was recorded. Please try again.");
+    setPhase(url ? "compare" : "idle");
   }, []);
 
   const handlePlayOriginal = useCallback(async () => {
+    playback.current?.pause();
     try {
       await speak(sentence, { lang: language, rate: 0.8 });
     } catch {
@@ -102,13 +122,21 @@ export function ShadowingPlayer({
 
   const handlePlayRecording = useCallback(() => {
     if (recordingUrl) {
+      stopTTS();
+      playback.current?.pause();
       const audio = new Audio(recordingUrl);
-      audio.play();
+      playback.current = audio;
+      void audio.play().catch(() => {
+        if (playback.current === audio) setRecordingError("Could not play your recording.");
+      });
     }
   }, [recordingUrl]);
 
   const handleReset = useCallback(() => {
-    cancelledRef.current = true;
+    activity.current++;
+    playback.current?.pause();
+    playback.current = null;
+    setRecordingError(null);
     stopTTS();
     resetRecorder();
     setRecordingUrl(null);
@@ -132,7 +160,7 @@ export function ShadowingPlayer({
           <div className="flex gap-2">
             <Button
               onClick={handleListen}
-              disabled={phase === "recording" || !voicesReady}
+              disabled={busyRecording || phase === "listen" || !voicesReady}
               variant={phase === "listen" ? "default" : "outline"}
               size="lg"
             >
@@ -163,15 +191,21 @@ export function ShadowingPlayer({
             ) : (
               <Button
                 onClick={handleRecord}
-                disabled={phase === "listen"}
+                disabled={phase === "listen" || busyRecording}
                 variant="outline"
                 size="lg"
               >
                 <MicIcon className="mr-2 h-5 w-5" />
-                2. Record Yourself
+                {phase === "requesting"
+                  ? "Waiting for microphone…"
+                  : phase === "finishing"
+                    ? "Finishing recording…"
+                    : "2. Record Yourself"}
               </Button>
             )}
           </div>
+
+          {recordingError && <p role="alert">{recordingError}</p>}
 
           {/* Step 3: Compare */}
           {phase === "compare" && recordingUrl && (
